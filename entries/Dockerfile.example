@@ -1,0 +1,57 @@
+# ============================================================
+# Book API Tournament — Dockerfile Template (v1/v2/v3 with SQLite)
+# ============================================================
+# Replace <placeholders> with your language/framework specifics.
+#
+# Requirements:
+# - Final image listens on port 8080
+# - SQLite database initialized from schema + seed
+# - DB_PATH env var points to the database file
+
+# === Build stage ===
+FROM <build-image> AS build
+WORKDIR /app
+COPY . .
+RUN <install-dependencies>
+RUN <build-command>
+
+# === Runtime stage ===
+FROM <runtime-image>
+WORKDIR /app
+
+# Install SQLite (if not already in the runtime image)
+RUN apt-get update && apt-get install -y sqlite3 && rm -rf /var/lib/apt/lists/*
+
+# Copy database files and initialize
+COPY db/schema.sql db/seed-small.sql /app/db/
+RUN cat /app/db/schema.sql /app/db/seed-small.sql | sqlite3 /app/books.db
+
+# Copy the built application
+COPY --from=build /app/<artifact> .
+
+# Configure
+ENV DB_PATH=/app/books.db
+EXPOSE 8080
+
+CMD ["./<binary>"]
+
+# ============================================================
+# Hardcoded Variant (no database)
+# ============================================================
+# Use this pattern for entries that cannot connect to SQLite
+# (e.g., COBOL, assembly) or minimal proof-of-concept entries.
+# Data is hardcoded directly in source code (4 authors, 8 books).
+# Hardcoded entries can only compete against other Hardcoded entries.
+#
+# FROM <build-image> AS build
+# WORKDIR /app
+# COPY . .
+# RUN <install-dependencies>
+# RUN <build-command>
+#
+# FROM <runtime-image>
+# WORKDIR /app
+# COPY --from=build /app/<artifact> .
+# # No database — data is hardcoded in source
+# EXPOSE 8080
+# CMD ["./<binary>"]

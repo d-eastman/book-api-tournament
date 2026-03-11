@@ -1,0 +1,10 @@
+# Entry metadata for the Book API Tournament
+# See CONTRIBUTING.md for full details
+
+framework: "Framework Name"      # e.g., "Fiber", "Express", "FastAPI"
+language: "Language"              # e.g., "Go", "TypeScript", "Python"
+version: "1.0.0"                 # Framework version used
+author: "Your Name"              # Your name or GitHub handle
+level: "v1"                      # "hardcoded", "v1", "v2", or "v3"
+repo: ""                         # Optional: link to your fork or source
+notes: ""                        # Optional: implementation notes

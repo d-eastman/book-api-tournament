@@ -1,0 +1,15 @@
+CREATE TABLE IF NOT EXISTS authors (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    bio TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS books (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    author_id INTEGER NOT NULL,
+    genre TEXT NOT NULL,
+    year INTEGER NOT NULL,
+    description TEXT NOT NULL,
+    FOREIGN KEY (author_id) REFERENCES authors(id)
+);

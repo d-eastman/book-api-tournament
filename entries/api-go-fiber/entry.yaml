@@ -1,0 +1,7 @@
+framework: "Fiber"
+language: "Go"
+version: "2.52.5"
+author: "Book API Tournament"
+level: "v1"
+repo: ""
+notes: "First entry — validates the pipeline end-to-end."

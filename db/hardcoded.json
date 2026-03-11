@@ -1,0 +1,90 @@
+{
+  "authors": [
+    {
+      "id": 1,
+      "name": "Octavia Butler",
+      "bio": "American science fiction author known for blending African American spirituality with science fiction."
+    },
+    {
+      "id": 2,
+      "name": "Toni Morrison",
+      "bio": "Nobel Prize-winning novelist celebrated for her powerful exploration of Black identity and American history."
+    },
+    {
+      "id": 3,
+      "name": "N.K. Jemisin",
+      "bio": "First author to win the Hugo Award for Best Novel three years in a row for the Broken Earth trilogy."
+    },
+    {
+      "id": 4,
+      "name": "James Baldwin",
+      "bio": "Essayist and novelist whose works explored racial and social issues in America."
+    }
+  ],
+  "books": [
+    {
+      "id": 1,
+      "title": "Kindred",
+      "authorId": 1,
+      "genre": "Science Fiction",
+      "year": 1979,
+      "description": "A modern Black woman is transported back in time to the antebellum South."
+    },
+    {
+      "id": 2,
+      "title": "Parable of the Sower",
+      "authorId": 1,
+      "genre": "Science Fiction",
+      "year": 1993,
+      "description": "In a dystopian future California, a young woman with hyperempathy syndrome founds a new faith."
+    },
+    {
+      "id": 3,
+      "title": "Beloved",
+      "authorId": 2,
+      "genre": "Literary Fiction",
+      "year": 1987,
+      "description": "A formerly enslaved woman is haunted by the ghost of her deceased daughter."
+    },
+    {
+      "id": 4,
+      "title": "Song of Solomon",
+      "authorId": 2,
+      "genre": "Literary Fiction",
+      "year": 1977,
+      "description": "A young African American man discovers his family history and identity through a mythical journey."
+    },
+    {
+      "id": 5,
+      "title": "The Fifth Season",
+      "authorId": 3,
+      "genre": "Fantasy",
+      "year": 2015,
+      "description": "On a continent plagued by catastrophic seismic events, a woman searches for her kidnapped daughter."
+    },
+    {
+      "id": 6,
+      "title": "The City We Became",
+      "authorId": 3,
+      "genre": "Urban Fantasy",
+      "year": 2020,
+      "description": "New York City comes alive as its boroughs are embodied by human avatars who must defend it."
+    },
+    {
+      "id": 7,
+      "title": "Go Tell It on the Mountain",
+      "authorId": 4,
+      "genre": "Literary Fiction",
+      "year": 1953,
+      "description": "A semi-autobiographical novel about a young boy's spiritual awakening in 1930s Harlem."
+    },
+    {
+      "id": 8,
+      "title": "Giovanni's Room",
+      "authorId": 4,
+      "genre": "Literary Fiction",
+      "year": 1956,
+      "description": "An American man in Paris grapples with his identity and a love affair with an Italian bartender."
+    }
+  ]
+}

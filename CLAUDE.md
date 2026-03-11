@@ -24,6 +24,7 @@ book-api-tournament/
 │   ├── SPEC.md                         # The API contract (single source of truth)
 │   └── CHANGELOG.md                    # Spec version history
 ├── db/
+│   ├── hardcoded.json                  # Canonical Hardcoded data (4 authors, 8 books) — JSON
 │   ├── schema.sql                      # CREATE TABLE statements
 │   ├── seed-small.sql                  # 8 authors, 16 books (default)
 │   ├── seed-medium.sql                 # 100 authors, 1,000 books
@@ -161,25 +162,37 @@ Full spec details are in `spec/SPEC.md`. Architecture and benchmarking details a
 
 For Hardcoded-level entries only. This data must be embedded directly in source code.
 
-**Authors:**
-| ID | Name | Bio |
-|----|------|-----|
-| 1 | Octavia Butler | American science fiction author known for blending African American spirituality with science fiction. |
-| 2 | Toni Morrison | Nobel Prize-winning novelist celebrated for her powerful exploration of Black identity and American history. |
-| 3 | N.K. Jemisin | First author to win the Hugo Award for Best Novel three years in a row for the Broken Earth trilogy. |
-| 4 | James Baldwin | Essayist and novelist whose works explored racial and social issues in America. |
+**Canonical source: `db/hardcoded.json`** — This JSON file is the single source of truth for Hardcoded entry data. It uses the exact camelCase key names (`authorId`, not `author_id`) that your API must produce. Copy the data from this file into your source code. The validator loads this file to verify Hardcoded entry correctness.
 
-**Books:**
-| ID | Title | AuthorID | Genre | Year |
-|----|-------|----------|-------|------|
-| 1 | Kindred | 1 | Science Fiction | 1979 |
-| 2 | Parable of the Sower | 1 | Science Fiction | 1993 |
-| 3 | Beloved | 2 | Literary Fiction | 1987 |
-| 4 | Song of Solomon | 2 | Literary Fiction | 1977 |
-| 5 | The Fifth Season | 3 | Fantasy | 2015 |
-| 6 | The City We Became | 3 | Urban Fantasy | 2020 |
-| 7 | Go Tell It on the Mountain | 4 | Literary Fiction | 1953 |
-| 8 | Giovanni's Room | 4 | Literary Fiction | 1956 |
+```json
+{
+  "authors": [
+    {"id": 1, "name": "Octavia Butler", "bio": "American science fiction author known for blending African American spirituality with science fiction."},
+    {"id": 2, "name": "Toni Morrison", "bio": "Nobel Prize-winning novelist celebrated for her powerful exploration of Black identity and American history."},
+    {"id": 3, "name": "N.K. Jemisin", "bio": "First author to win the Hugo Award for Best Novel three years in a row for the Broken Earth trilogy."},
+    {"id": 4, "name": "James Baldwin", "bio": "Essayist and novelist whose works explored racial and social issues in America."}
+  ],
+  "books": [
+    {"id": 1, "title": "Kindred", "authorId": 1, "genre": "Science Fiction", "year": 1979, "description": "A modern Black woman is transported back in time to the antebellum South."},
+    {"id": 2, "title": "Parable of the Sower", "authorId": 1, "genre": "Science Fiction", "year": 1993, "description": "In a dystopian future California, a young woman with hyperempathy syndrome founds a new faith."},
+    {"id": 3, "title": "Beloved", "authorId": 2, "genre": "Literary Fiction", "year": 1987, "description": "A formerly enslaved woman is haunted by the ghost of her deceased daughter."},
+    {"id": 4, "title": "Song of Solomon", "authorId": 2, "genre": "Literary Fiction", "year": 1977, "description": "A young African American man discovers his family history and identity through a mythical journey."},
+    {"id": 5, "title": "The Fifth Season", "authorId": 3, "genre": "Fantasy", "year": 2015, "description": "On a continent plagued by catastrophic seismic events, a woman searches for her kidnapped daughter."},
+    {"id": 6, "title": "The City We Became", "authorId": 3, "genre": "Urban Fantasy", "year": 2020, "description": "New York City comes alive as its boroughs are embodied by human avatars who must defend it."},
+    {"id": 7, "title": "Go Tell It on the Mountain", "authorId": 4, "genre": "Literary Fiction", "year": 1953, "description": "A semi-autobiographical novel about a young boy's spiritual awakening in 1930s Harlem."},
+    {"id": 8, "title": "Giovanni's Room", "authorId": 4, "genre": "Literary Fiction", "year": 1956, "description": "An American man in Paris grapples with his identity and a love affair with an Italian bartender."}
+  ]
+}
+```
+
+**Quick reference** (same data as above, in table form):
+
+| ID | Author | Books |
+|----|--------|-------|
+| 1 | Octavia Butler | Kindred (1979, Sci-Fi), Parable of the Sower (1993, Sci-Fi) |
+| 2 | Toni Morrison | Beloved (1987, Literary), Song of Solomon (1977, Literary) |
+| 3 | N.K. Jemisin | The Fifth Season (2015, Fantasy), The City We Became (2020, Urban Fantasy) |
+| 4 | James Baldwin | Go Tell It on the Mountain (1953, Literary), Giovanni's Room (1956, Literary) |
 
 ### SQLite Data Sizes (v1, v2, v3)
 
@@ -356,7 +369,7 @@ RUN <build-commands>
 FROM <runtime-image>
 WORKDIR /app
 COPY --from=build /app/<artifact> .
-# No database — data is hardcoded in source
+# No database — data is hardcoded in source (copied from db/hardcoded.json)
 EXPOSE 8080
 CMD ["./<binary>"]
 ```
@@ -659,7 +672,7 @@ Most entries should **skip Hardcoded** and start at v1 with SQLite. Build increm
 
 Each checkpoint produces a working, validatable, benchmarkable entry. You can stop at any checkpoint and submit.
 
-**For Hardcoded entries** (COBOL, assembly, etc.): Skip SQLite setup. Hardcode the 4 authors and 8 books in source. Implement the 4 v1 endpoints. Validate with `--level hardcoded`. This is a dead-end path — you can't progress to v1/v2/v3 without adding SQLite.
+**For Hardcoded entries** (COBOL, assembly, etc.): Skip SQLite setup. Copy the data from `db/hardcoded.json` into your source code. Implement the 4 v1 endpoints. Validate with `--level hardcoded`. This is a dead-end path — you can't progress to v1/v2/v3 without adding SQLite.
 
 ---
 
@@ -674,7 +687,7 @@ When using Claude Code to implement entries:
 3. **Start with SQLite** unless the framework truly can't support it. Skip Hardcoded.
 4. **Reference spec/SPEC.md** for any ambiguity in endpoint behavior
 5. **For v1/v2/v3 entries**: copy `db/schema.sql` and `db/seed-small.sql` into the entry's `db/` directory
-6. **For Hardcoded entries**: hardcode the 4 authors and 8 books directly in source code
+5. **For Hardcoded entries**: copy the data from `db/hardcoded.json` into source code — do not retype it manually
 7. **Test with the validator** at each checkpoint: `./validate/run.sh http://localhost:8080 --detect`
 8. **Match JSON keys exactly** — `authorId` not `author_id`, `totalItems` not `total_items`
 9. **Set entry.yaml `level` correctly** — it must match what the entry actually implements
@@ -700,5 +713,3 @@ When using Claude Code to implement entries:
 - Returning POST validation errors as 500 instead of 400
 - Not rounding averageYear to 2 decimal places in stats
 - Missing booksByGenre or authorsByBookCount in stats response
-
-

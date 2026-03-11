@@ -1,0 +1,90 @@
+name: Validate Entry
+
+on:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for disallowed file changes
+        run: |
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          DISALLOWED=$(echo "$CHANGED_FILES" | grep -vE '^entries/' || true)
+          if [ -n "$DISALLOWED" ]; then
+            echo ""
+            echo "ERROR: This PR modifies files outside entries/:"
+            echo "$DISALLOWED"
+            echo ""
+            echo "Contributor PRs may only add or modify files under entries/."
+            exit 1
+          fi
+
+      - name: Detect entry directory
+        id: detect-entry
+        run: |
+          ENTRY_DIR=$(git diff --name-only origin/${{ github.base_ref }}...HEAD \
+            | grep '^entries/' \
+            | cut -d'/' -f1-2 \
+            | sort -u)
+
+          ENTRY_COUNT=$(echo "$ENTRY_DIR" | wc -l | tr -d ' ')
+          if [ "$ENTRY_COUNT" -ne 1 ]; then
+            echo "ERROR: PR must modify exactly one entry directory. Found:"
+            echo "$ENTRY_DIR"
+            exit 1
+          fi
+
+          echo "entry_dir=$ENTRY_DIR" >> "$GITHUB_OUTPUT"
+          echo "Detected entry: $ENTRY_DIR"
+
+      - name: Build Docker image
+        run: |
+          docker build -t entry-under-test "${{ steps.detect-entry.outputs.entry_dir }}"
+
+      - name: Start container
+        id: container
+        run: |
+          CONTAINER_ID=$(docker run --rm -d -p 8080:8080 entry-under-test)
+          echo "container_id=$CONTAINER_ID" >> "$GITHUB_OUTPUT"
+          echo "Started container: $CONTAINER_ID"
+
+      - name: Wait for container to be ready
+        run: |
+          echo "Waiting for API to be ready..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8080/api/authors > /dev/null 2>&1; then
+              echo "API is ready after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "ERROR: API did not become ready within 30 seconds"
+          docker logs ${{ steps.container.outputs.container_id }} || true
+          exit 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Run validator (auto-detect)
+        run: |
+          chmod +x ./validate/run.sh
+          ./validate/run.sh http://localhost:8080 --detect
+
+      - name: Stop container
+        if: always()
+        run: |
+          if [ -n "${{ steps.container.outputs.container_id }}" ]; then
+            docker stop ${{ steps.container.outputs.container_id }} || true
+          fi
