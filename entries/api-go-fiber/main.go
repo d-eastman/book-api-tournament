@@ -48,16 +48,28 @@ func main() {
 	})
 
 	app.Get("/api/authors", getAuthors)
+	app.Get("/api/authors/:id/books", getAuthorBooks)
 	app.Get("/api/authors/:id", getAuthor)
 	app.Get("/api/books", getBooks)
 	app.Get("/api/books/:id", getBook)
+	app.Get("/api/search", search)
 
 	log.Println("Server starting on :8080")
 	log.Fatal(app.Listen(":8080"))
 }
 
 func getAuthors(c *fiber.Ctx) error {
-	rows, err := db.Query("SELECT id, name, bio FROM authors ORDER BY id")
+	keyword := c.Query("keyword")
+	var rows *sql.Rows
+	var err error
+	if keyword != "" {
+		rows, err = db.Query(
+			"SELECT id, name, bio FROM authors WHERE LOWER(name) LIKE '%' || LOWER(?) || '%' OR LOWER(bio) LIKE '%' || LOWER(?) || '%' ORDER BY id",
+			keyword, keyword,
+		)
+	} else {
+		rows, err = db.Query("SELECT id, name, bio FROM authors ORDER BY id")
+	}
 	if err != nil {
 		return c.Status(500).JSON(ErrorResponse{Error: "Database error"})
 	}
@@ -92,7 +104,17 @@ func getAuthor(c *fiber.Ctx) error {
 }
 
 func getBooks(c *fiber.Ctx) error {
-	rows, err := db.Query("SELECT id, title, author_id, genre, year, description FROM books ORDER BY id")
+	keyword := c.Query("keyword")
+	var rows *sql.Rows
+	var err error
+	if keyword != "" {
+		rows, err = db.Query(
+			"SELECT id, title, author_id, genre, year, description FROM books WHERE LOWER(title) LIKE '%' || LOWER(?) || '%' OR LOWER(genre) LIKE '%' || LOWER(?) || '%' OR LOWER(description) LIKE '%' || LOWER(?) || '%' ORDER BY id",
+			keyword, keyword, keyword,
+		)
+	} else {
+		rows, err = db.Query("SELECT id, title, author_id, genre, year, description FROM books ORDER BY id")
+	}
 	if err != nil {
 		return c.Status(500).JSON(ErrorResponse{Error: "Database error"})
 	}
@@ -125,4 +147,87 @@ func getBook(c *fiber.Ctx) error {
 		return c.Status(500).JSON(ErrorResponse{Error: "Database error"})
 	}
 	return c.JSON(b)
+}
+
+func getAuthorBooks(c *fiber.Ctx) error {
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return c.Status(404).JSON(ErrorResponse{Error: "Author not found"})
+	}
+
+	// Check author exists
+	var exists int
+	err = db.QueryRow("SELECT id FROM authors WHERE id = ?", id).Scan(&exists)
+	if err == sql.ErrNoRows {
+		return c.Status(404).JSON(ErrorResponse{Error: "Author not found"})
+	}
+	if err != nil {
+		return c.Status(500).JSON(ErrorResponse{Error: "Database error"})
+	}
+
+	rows, err := db.Query("SELECT id, title, author_id, genre, year, description FROM books WHERE author_id = ? ORDER BY id", id)
+	if err != nil {
+		return c.Status(500).JSON(ErrorResponse{Error: "Database error"})
+	}
+	defer rows.Close()
+
+	books := make([]Book, 0)
+	for rows.Next() {
+		var b Book
+		if err := rows.Scan(&b.ID, &b.Title, &b.AuthorID, &b.Genre, &b.Year, &b.Description); err != nil {
+			return c.Status(500).JSON(ErrorResponse{Error: "Database error"})
+		}
+		books = append(books, b)
+	}
+	return c.JSON(books)
+}
+
+func search(c *fiber.Ctx) error {
+	keyword := c.Query("keyword")
+	if keyword == "" {
+		return c.Status(400).JSON(ErrorResponse{Error: "keyword parameter is required"})
+	}
+
+	// Search authors
+	authorRows, err := db.Query(
+		"SELECT id, name, bio FROM authors WHERE LOWER(name) LIKE '%' || LOWER(?) || '%' OR LOWER(bio) LIKE '%' || LOWER(?) || '%' ORDER BY id",
+		keyword, keyword,
+	)
+	if err != nil {
+		return c.Status(500).JSON(ErrorResponse{Error: "Database error"})
+	}
+	defer authorRows.Close()
+
+	authors := make([]Author, 0)
+	for authorRows.Next() {
+		var a Author
+		if err := authorRows.Scan(&a.ID, &a.Name, &a.Bio); err != nil {
+			return c.Status(500).JSON(ErrorResponse{Error: "Database error"})
+		}
+		authors = append(authors, a)
+	}
+
+	// Search books
+	bookRows, err := db.Query(
+		"SELECT id, title, author_id, genre, year, description FROM books WHERE LOWER(title) LIKE '%' || LOWER(?) || '%' OR LOWER(genre) LIKE '%' || LOWER(?) || '%' OR LOWER(description) LIKE '%' || LOWER(?) || '%' ORDER BY id",
+		keyword, keyword, keyword,
+	)
+	if err != nil {
+		return c.Status(500).JSON(ErrorResponse{Error: "Database error"})
+	}
+	defer bookRows.Close()
+
+	books := make([]Book, 0)
+	for bookRows.Next() {
+		var b Book
+		if err := bookRows.Scan(&b.ID, &b.Title, &b.AuthorID, &b.Genre, &b.Year, &b.Description); err != nil {
+			return c.Status(500).JSON(ErrorResponse{Error: "Database error"})
+		}
+		books = append(books, b)
+	}
+
+	return c.JSON(fiber.Map{
+		"authors": authors,
+		"books":   books,
+	})
 }

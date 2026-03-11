@@ -280,10 +280,10 @@ class TestSuite:
                  f"Got {len(data) if isinstance(data, list) else 'non-array'} results")
         all_pass = all_pass and ok
 
-        # keyword=fantasy on books → 4 results (genre match)
+        # keyword=fantasy on books → 5 results (Fantasy x4 + Urban Fantasy x1)
         status, _, data = http_get(self.url("/api/books?keyword=fantasy"))
-        ok = status == 200 and isinstance(data, list) and len(data) == 4
-        self.add("GET /api/books?keyword=fantasy → 4 results", ok,
+        ok = status == 200 and isinstance(data, list) and len(data) == 5
+        self.add("GET /api/books?keyword=fantasy → 5 results", ok,
                  f"Got {len(data) if isinstance(data, list) else 'non-array'} results")
         all_pass = all_pass and ok
 

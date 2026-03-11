@@ -1,6 +1,6 @@
 import os
 import sqlite3
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
@@ -16,7 +16,14 @@ def get_db():
 @app.route("/api/authors")
 def get_authors():
     conn = get_db()
-    rows = conn.execute("SELECT id, name, bio FROM authors").fetchall()
+    keyword = request.args.get("keyword")
+    if keyword:
+        rows = conn.execute(
+            "SELECT id, name, bio FROM authors WHERE LOWER(name) LIKE '%' || LOWER(?) || '%' OR LOWER(bio) LIKE '%' || LOWER(?) || '%'",
+            (keyword, keyword),
+        ).fetchall()
+    else:
+        rows = conn.execute("SELECT id, name, bio FROM authors").fetchall()
     conn.close()
     return jsonify([dict(r) for r in rows])
 
@@ -34,7 +41,14 @@ def get_author(author_id):
 @app.route("/api/books")
 def get_books():
     conn = get_db()
-    rows = conn.execute("SELECT id, title, author_id, genre, year, description FROM books").fetchall()
+    keyword = request.args.get("keyword")
+    if keyword:
+        rows = conn.execute(
+            "SELECT id, title, author_id, genre, year, description FROM books WHERE LOWER(title) LIKE '%' || LOWER(?) || '%' OR LOWER(genre) LIKE '%' || LOWER(?) || '%' OR LOWER(description) LIKE '%' || LOWER(?) || '%'",
+            (keyword, keyword, keyword),
+        ).fetchall()
+    else:
+        rows = conn.execute("SELECT id, title, author_id, genre, year, description FROM books").fetchall()
     conn.close()
     books = []
     for r in rows:
@@ -54,6 +68,49 @@ def get_book(book_id):
     book = dict(row)
     book["authorId"] = book.pop("author_id")
     return jsonify(book)
+
+
+@app.route("/api/authors/<int:author_id>/books")
+def get_author_books(author_id):
+    conn = get_db()
+    author = conn.execute("SELECT id FROM authors WHERE id = ?", (author_id,)).fetchone()
+    if author is None:
+        conn.close()
+        return jsonify({"error": "Author not found"}), 404
+    rows = conn.execute(
+        "SELECT id, title, author_id, genre, year, description FROM books WHERE author_id = ?",
+        (author_id,),
+    ).fetchall()
+    conn.close()
+    books = []
+    for r in rows:
+        book = dict(r)
+        book["authorId"] = book.pop("author_id")
+        books.append(book)
+    return jsonify(books)
+
+
+@app.route("/api/search")
+def search():
+    keyword = request.args.get("keyword")
+    if not keyword:
+        return jsonify({"error": "keyword parameter is required"}), 400
+    conn = get_db()
+    authors = conn.execute(
+        "SELECT id, name, bio FROM authors WHERE LOWER(name) LIKE '%' || LOWER(?) || '%' OR LOWER(bio) LIKE '%' || LOWER(?) || '%'",
+        (keyword, keyword),
+    ).fetchall()
+    book_rows = conn.execute(
+        "SELECT id, title, author_id, genre, year, description FROM books WHERE LOWER(title) LIKE '%' || LOWER(?) || '%' OR LOWER(genre) LIKE '%' || LOWER(?) || '%' OR LOWER(description) LIKE '%' || LOWER(?) || '%'",
+        (keyword, keyword, keyword),
+    ).fetchall()
+    conn.close()
+    books = []
+    for r in book_rows:
+        book = dict(r)
+        book["authorId"] = book.pop("author_id")
+        books.append(book)
+    return jsonify({"authors": [dict(a) for a in authors], "books": books})
 
 
 if __name__ == "__main__":
