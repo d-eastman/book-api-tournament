@@ -1,0 +1,13 @@
+{
+  "name": "api-node-express",
+  "version": "1.0.0",
+  "description": "Book API Tournament entry — Node.js with Express and better-sqlite3",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "better-sqlite3": "^11.7.0"
+  }
+}

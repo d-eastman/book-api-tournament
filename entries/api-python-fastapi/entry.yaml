@@ -1,0 +1,7 @@
+framework: "FastAPI"
+language: "Python"
+version: "0.115"
+author: "David Eastman"
+level: "v1"
+repo: ""
+notes: "Python with FastAPI, Uvicorn, and built-in sqlite3"

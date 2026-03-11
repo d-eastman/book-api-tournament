@@ -1,0 +1,7 @@
+framework: "Flask"
+language: "Python"
+version: "3.1"
+author: "David Eastman"
+level: "v1"
+repo: ""
+notes: "Python with Flask and built-in sqlite3"

@@ -1,0 +1,7 @@
+framework: "Actix Web"
+language: "Rust"
+version: "4"
+author: "David Eastman"
+level: "v1"
+repo: ""
+notes: "Rust with Actix Web and rusqlite (bundled SQLite)"

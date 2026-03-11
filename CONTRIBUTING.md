@@ -123,18 +123,25 @@ Hardcoded entries do not need these files.
 
 ### 6. Validate your entry
 
-Build and run your container, then validate:
+Copy the build-and-validate script into your entry directory:
+
+```bash
+cp entries/build-and-validate.sh.example entries/api-your-framework/build-and-validate.sh
+chmod +x entries/api-your-framework/build-and-validate.sh
+```
+
+Then run it from your entry directory:
 
 ```bash
 cd entries/api-your-framework
-docker build -t api-your-framework .
-docker run -p 8080:8080 api-your-framework
+./build-and-validate.sh
+```
 
-# In another terminal — auto-detect your level
-./validate/run.sh http://localhost:8080 --detect
+This builds the Docker image, starts the container, auto-detects your level with `--detect`, and cleans up after itself. You can pass extra flags:
 
-# Or validate a specific level
-./validate/run.sh http://localhost:8080 --level v1
+```bash
+./build-and-validate.sh --verbose          # show individual test results
+./build-and-validate.sh --level v1         # validate a specific level
 ```
 
 All tests for your declared level must pass before opening a PR.
