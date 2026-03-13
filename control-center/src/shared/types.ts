@@ -5,7 +5,7 @@ export interface Entry {
   language: string;
   version: string;
   author: string;
-  level: "hardcoded" | "v1" | "v2" | "v3";
+  level: "v1" | "v2" | "v3";
   repo?: string;
   notes?: string;
   path: string;                  // relative path from repo root
@@ -16,8 +16,8 @@ export interface Entry {
 
 // Benchmark configuration
 export interface BenchmarkConfig {
-  level: "hardcoded" | "v1" | "v2" | "v3";
-  dataSize: "hardcoded" | "small" | "medium" | "large";
+  level: "v1" | "v2" | "v3";
+  dataSize: "small" | "medium" | "large";
   mode: "quick" | "full";
   endpoints?: string[];
 }
@@ -115,12 +115,6 @@ export const METRIC_OPTIONS: MetricOption[] = [
 
 // Endpoints benchmarked per level
 export const ENDPOINTS_BY_LEVEL: Record<string, string[]> = {
-  hardcoded: [
-    "GET /api/authors",
-    "GET /api/books",
-    "GET /api/authors/1",
-    "GET /api/books/1",
-  ],
   v1: [
     "GET /api/authors",
     "GET /api/books",

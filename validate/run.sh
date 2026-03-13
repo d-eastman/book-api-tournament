@@ -9,7 +9,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [ $# -lt 1 ]; then
-    echo "Usage: $0 <base-url> [--level hardcoded|v1|v2|v3] [--detect] [--verbose]"
+    echo "Usage: $0 <base-url> [--level v1|v2|v3] [--detect] [--verbose]"
     echo ""
     echo "Options:"
     echo "  --level LEVEL   Validate against a specific level (default: v3)"

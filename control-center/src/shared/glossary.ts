@@ -211,14 +211,14 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
 
   "level": {
     term: "Level",
-    plain: "Which tier of the API spec to benchmark. Higher levels have more endpoints — Hardcoded has 4, v1 has 4 with a database, v2 has 6, and v3 has 8.",
+    plain: "Which tier of the API spec to benchmark. Higher levels have more endpoints — v1 has 4, v2 has 6, and v3 has 8.",
     technical: "Entries at or above the selected level are eligible. A v3 entry can compete in a v1 tournament (benchmarked on v1 endpoints only).",
   },
 
   "data size": {
     term: "Data Size",
     plain: "How much data is in the database during the benchmark. Small has 16 books, medium has 1,000, and large has 50,000. Bigger datasets stress memory and serialization.",
-    technical: "Controlled by which seed SQL file initializes the SQLite database. Hardcoded entries always use their fixed 4 authors / 8 books.",
+    technical: "Controlled by which seed SQL file initializes the SQLite database.",
   },
 
   "endpoints": {
@@ -227,12 +227,6 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
   },
 
   // ── Level Concepts ─────────────────────────────────
-
-  "hardcoded": {
-    term: "Hardcoded",
-    plain: "An entry level where the data is baked directly into the source code — no database. Reserved for exotic languages like COBOL and Assembly that can't easily connect to a database.",
-    technical: "4 authors, 8 books, embedded in source. Implements only the 4 basic GET endpoints. Cannot compete against database-backed entries. Separate league.",
-  },
 
   "v1": {
     term: "Level v1",

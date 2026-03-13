@@ -30,7 +30,6 @@ export function OperatorPage() {
   }, []);
 
   const filteredEntries = entries.filter((e) => {
-    if (config.level === "hardcoded") return e.level === "hardcoded";
     const levels = ["v1", "v2", "v3"];
     return levels.indexOf(e.level) >= levels.indexOf(config.level);
   });

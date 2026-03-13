@@ -13,7 +13,7 @@ export function LandingPage() {
   }, []);
 
   const languages = [...new Set(entries.map((e) => e.language))].sort();
-  const levels = ["hardcoded", "v1", "v2", "v3"];
+  const levels = ["v1", "v2", "v3"];
   const levelCounts = Object.fromEntries(
     levels.map((l) => [l, entries.filter((e) => e.level === l).length])
   );

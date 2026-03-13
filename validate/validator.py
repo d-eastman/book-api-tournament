@@ -4,7 +4,7 @@ Book API Tournament — Validator
 Zero-dependency correctness test suite for API entries.
 
 Usage:
-    python3 validator.py <base-url> [--level hardcoded|v1|v2|v3] [--detect] [--verbose]
+    python3 validator.py <base-url> [--level v1|v2|v3] [--detect] [--verbose]
 """
 
 import sys
@@ -16,21 +16,18 @@ from urllib.parse import quote
 
 # ─── Expected Data ───────────────────────────────────────────────────────────
 
-HARDCODED_AUTHORS = [
+SMALL_AUTHORS = [
     {"id": 1, "name": "Octavia Butler", "bio": "American science fiction author known for blending African American spirituality with science fiction."},
     {"id": 2, "name": "Toni Morrison", "bio": "Nobel Prize-winning novelist celebrated for her powerful exploration of Black identity and American history."},
     {"id": 3, "name": "N.K. Jemisin", "bio": "First author to win the Hugo Award for Best Novel three years in a row for the Broken Earth trilogy."},
     {"id": 4, "name": "James Baldwin", "bio": "Essayist and novelist whose works explored racial and social issues in America."},
-]
-
-SMALL_AUTHORS = HARDCODED_AUTHORS + [
     {"id": 5, "name": "Ursula K. Le Guin", "bio": "American author best known for science fiction and fantasy works exploring gender, society, and political structures."},
     {"id": 6, "name": "Haruki Murakami", "bio": "Japanese novelist known for surreal and dreamlike narratives blending the mundane with the fantastical."},
     {"id": 7, "name": "Chimamanda Ngozi Adichie", "bio": "Nigerian author celebrated for her novels and essays exploring identity, feminism, and the immigrant experience."},
     {"id": 8, "name": "Terry Pratchett", "bio": "British author best known for the Discworld series, a satirical fantasy series spanning over 40 novels."},
 ]
 
-HARDCODED_BOOKS = [
+SMALL_BOOKS = [
     {"id": 1, "title": "Kindred", "authorId": 1, "genre": "Science Fiction", "year": 1979},
     {"id": 2, "title": "Parable of the Sower", "authorId": 1, "genre": "Science Fiction", "year": 1993},
     {"id": 3, "title": "Beloved", "authorId": 2, "genre": "Literary Fiction", "year": 1987},
@@ -39,9 +36,6 @@ HARDCODED_BOOKS = [
     {"id": 6, "title": "The City We Became", "authorId": 3, "genre": "Urban Fantasy", "year": 2020},
     {"id": 7, "title": "Go Tell It on the Mountain", "authorId": 4, "genre": "Literary Fiction", "year": 1953},
     {"id": 8, "title": "Giovanni's Room", "authorId": 4, "genre": "Literary Fiction", "year": 1956},
-]
-
-SMALL_BOOKS = HARDCODED_BOOKS + [
     {"id": 9, "title": "The Left Hand of Darkness", "authorId": 5, "genre": "Science Fiction", "year": 1969},
     {"id": 10, "title": "A Wizard of Earthsea", "authorId": 5, "genre": "Fantasy", "year": 1968},
     {"id": 11, "title": "Norwegian Wood", "authorId": 6, "genre": "Literary Fiction", "year": 1987},
@@ -148,9 +142,8 @@ class TestSuite:
         self.level = level
         self.verbose = verbose
         self.results = []
-        self.is_hardcoded = level == "hardcoded"
-        self.authors = HARDCODED_AUTHORS if self.is_hardcoded else SMALL_AUTHORS
-        self.books = HARDCODED_BOOKS if self.is_hardcoded else SMALL_BOOKS
+        self.authors = SMALL_AUTHORS
+        self.books = SMALL_BOOKS
 
     def add(self, name, passed, message=""):
         result = TestResult(name, passed, message)
@@ -209,7 +202,7 @@ class TestSuite:
 
         # GET /api/books
         status, _, data = http_get(self.url("/api/books"))
-        # v3 without keyword returns paginated; v1/v2/hardcoded returns flat array
+        # v3 without keyword returns paginated; v1/v2 returns flat array
         if self.level == "v3":
             is_paginated = isinstance(data, dict) and "data" in data
             if is_paginated:
@@ -633,14 +626,8 @@ class TestSuite:
 # ─── Auto-Detect Mode ───────────────────────────────────────────────────────
 
 def auto_detect(base_url, verbose=False):
-    """Try each level, report the highest passing level.
-
-    Hardcoded and v1 have different expected data (4 vs 8 authors), so an entry
-    will typically pass one path or the other. We try all levels and track the
-    highest that passes, plus the first failure after the detected level.
-    """
+    """Try each level, report the highest passing level."""
     levels = [
-        ("hardcoded", "Hardcoded (4 endpoints, in-memory)"),
         ("v1", "v1 (4 endpoints, SQLite)"),
         ("v2", "v2 (+ filtering, search)"),
         ("v3", "v3 (+ POST, stats, pagination)"),
@@ -676,7 +663,7 @@ def auto_detect(base_url, verbose=False):
                 for r in failures:
                     print(f"    {r}")
                 break
-            # If nothing detected yet (e.g., hardcoded fails), keep trying higher levels
+            # If nothing detected yet (e.g., v1 fails), keep trying higher levels
 
     print()
     if detected:
@@ -700,7 +687,7 @@ def auto_detect(base_url, verbose=False):
 def main():
     parser = argparse.ArgumentParser(description="Book API Tournament Validator")
     parser.add_argument("base_url", help="Base URL of the API (e.g., http://localhost:8080)")
-    parser.add_argument("--level", choices=["hardcoded", "v1", "v2", "v3"], default="v3",
+    parser.add_argument("--level", choices=["v1", "v2", "v3"], default="v3",
                         help="Validation level (default: v3)")
     parser.add_argument("--detect", action="store_true",
                         help="Auto-detect the highest passing level")
@@ -717,8 +704,7 @@ def main():
     suite = TestSuite(args.base_url, args.level, args.verbose)
     passed, total = suite.run()
 
-    level_label = args.level.upper() if args.level != "hardcoded" else "HARDCODED"
-    print(f"\n=== {level_label} Validation ===")
+    print(f"\n=== {args.level.upper()} Validation ===")
 
     if args.verbose:
         for r in suite.results:

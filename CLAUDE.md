@@ -24,7 +24,6 @@ book-api-tournament/
 │   ├── SPEC.md                         # The API contract (single source of truth)
 │   └── CHANGELOG.md                    # Spec version history
 ├── db/
-│   ├── hardcoded.json                  # Canonical Hardcoded data (4 authors, 8 books) — JSON
 │   ├── schema.sql                      # CREATE TABLE statements
 │   ├── seed-small.sql                  # 8 authors, 16 books (default)
 │   ├── seed-medium.sql                 # 100 authors, 1,000 books
@@ -57,29 +56,17 @@ book-api-tournament/
 
 Every entry has a single **level** that defines what it implements and how it competes. Levels are strictly cumulative — a v2 entry implements everything in v1, and a v3 entry implements everything in v1 and v2.
 
-There are four levels: one special-case level for exotic frameworks, and three standard levels that form the normal progression.
+There are three levels that form the normal progression. All entries must use SQLite.
 
-### Level: Hardcoded *(special case — dead end)*
-
-For frameworks that **cannot connect to SQLite** (COBOL on Wheelchair, assembly rwasa, etc.) or where the creator only wants to ship a minimal proof-of-concept. Data is hardcoded in source code. No database. Limited to 4 authors and 8 books. Implements v1 endpoints only.
-
-**This is a dead end.** Hardcoded entries can only compete against other Hardcoded entries. They cannot participate in v1/v2/v3 tournaments or benchmarks at any data size. If you plan to go further than a proof-of-concept, skip Hardcoded and start at v1.
-
-**Endpoints (4):**
-- `GET /api/authors` — All authors (flat array, always 4)
-- `GET /api/authors/{id}` — Single author (404 if not found)
-- `GET /api/books` — All books (flat array, always 8)
-- `GET /api/books/{id}` — Single book (404 if not found)
-
-**Data:** 4 authors, 8 books, hardcoded in source. No database, no seed files.
-
-**Competes against:** Other Hardcoded entries only.
-
-### Level: v1 *(standard — starting point)*
+### Level: v1 *(starting point)*
 
 The recommended starting point for all entries. Four endpoints backed by SQLite. This is where most entries should begin before adding filtering and search.
 
-**Endpoints (4):** Same as Hardcoded.
+**Endpoints (4):**
+- `GET /api/authors` — All authors (flat array)
+- `GET /api/authors/{id}` — Single author (404 if not found)
+- `GET /api/books` — All books (flat array)
+- `GET /api/books/{id}` — Single book (404 if not found)
 
 **Data:** SQLite database initialized from `db/schema.sql` + `db/seed-{size}.sql`. Can be benchmarked at small, medium, or large data sizes.
 
@@ -125,28 +112,28 @@ The complete API with writes, computation, and pagination.
 
 ### Level Comparison
 
-| | Hardcoded | v1 | v2 | v3 |
-|---|:---:|:---:|:---:|:---:|
-| GET /api/authors | ✓ | ✓ | ✓ | ✓ |
-| GET /api/authors/{id} | ✓ | ✓ | ✓ | ✓ |
-| GET /api/books | ✓ | ✓ | ✓ | ✓ (paginated) |
-| GET /api/books/{id} | ✓ | ✓ | ✓ | ✓ |
-| GET /api/authors?keyword= | | | ✓ | ✓ |
-| GET /api/authors/{id}/books | | | ✓ | ✓ |
-| GET /api/books?keyword= | | | ✓ | ✓ |
-| GET /api/search?keyword= | | | ✓ | ✓ |
-| POST /api/books | | | | ✓ |
-| GET /api/stats | | | | ✓ |
-| Database | None | SQLite | SQLite | SQLite |
-| Data sizes | 4a/8b fixed | small/med/lg | small/med/lg | small/med/lg |
-| Benchmarked endpoints | 4 | 4 | 6 | 8 |
+| | v1 | v2 | v3 |
+|---|:---:|:---:|:---:|
+| GET /api/authors | ✓ | ✓ | ✓ |
+| GET /api/authors/{id} | ✓ | ✓ | ✓ |
+| GET /api/books | ✓ | ✓ | ✓ (paginated) |
+| GET /api/books/{id} | ✓ | ✓ | ✓ |
+| GET /api/authors?keyword= | | ✓ | ✓ |
+| GET /api/authors/{id}/books | | ✓ | ✓ |
+| GET /api/books?keyword= | | ✓ | ✓ |
+| GET /api/search?keyword= | | ✓ | ✓ |
+| POST /api/books | | | ✓ |
+| GET /api/stats | | | ✓ |
+| Database | SQLite | SQLite | SQLite |
+| Data sizes | small/med/lg | small/med/lg | small/med/lg |
+| Benchmarked endpoints | 4 | 6 | 8 |
 
 ### Rules (all levels)
 - All JSON uses **camelCase** keys (`authorId`, not `author_id`)
 - Error responses always use shape: `{"error": "message"}`
 - Content-Type is always `application/json`
 
-### Database (v1, v2, v3)
+### Database
 - SQLite, initialized from `db/schema.sql` + `db/seed-{size}.sql`
 - Database path configured via `DB_PATH` env var (default: `/app/books.db`)
 - Column `author_id` in SQL maps to `authorId` in JSON
@@ -158,45 +145,9 @@ Full spec details are in `spec/SPEC.md`. Architecture and benchmarking details a
 
 ## Data
 
-### Hardcoded Data (4 Authors, 8 Books)
+### SQLite Data Sizes
 
-For Hardcoded-level entries only. This data must be embedded directly in source code.
-
-**Canonical source: `db/hardcoded.json`** — This JSON file is the single source of truth for Hardcoded entry data. It uses the exact camelCase key names (`authorId`, not `author_id`) that your API must produce. Copy the data from this file into your source code. The validator loads this file to verify Hardcoded entry correctness.
-
-```json
-{
-  "authors": [
-    {"id": 1, "name": "Octavia Butler", "bio": "American science fiction author known for blending African American spirituality with science fiction."},
-    {"id": 2, "name": "Toni Morrison", "bio": "Nobel Prize-winning novelist celebrated for her powerful exploration of Black identity and American history."},
-    {"id": 3, "name": "N.K. Jemisin", "bio": "First author to win the Hugo Award for Best Novel three years in a row for the Broken Earth trilogy."},
-    {"id": 4, "name": "James Baldwin", "bio": "Essayist and novelist whose works explored racial and social issues in America."}
-  ],
-  "books": [
-    {"id": 1, "title": "Kindred", "authorId": 1, "genre": "Science Fiction", "year": 1979, "description": "A modern Black woman is transported back in time to the antebellum South."},
-    {"id": 2, "title": "Parable of the Sower", "authorId": 1, "genre": "Science Fiction", "year": 1993, "description": "In a dystopian future California, a young woman with hyperempathy syndrome founds a new faith."},
-    {"id": 3, "title": "Beloved", "authorId": 2, "genre": "Literary Fiction", "year": 1987, "description": "A formerly enslaved woman is haunted by the ghost of her deceased daughter."},
-    {"id": 4, "title": "Song of Solomon", "authorId": 2, "genre": "Literary Fiction", "year": 1977, "description": "A young African American man discovers his family history and identity through a mythical journey."},
-    {"id": 5, "title": "The Fifth Season", "authorId": 3, "genre": "Fantasy", "year": 2015, "description": "On a continent plagued by catastrophic seismic events, a woman searches for her kidnapped daughter."},
-    {"id": 6, "title": "The City We Became", "authorId": 3, "genre": "Urban Fantasy", "year": 2020, "description": "New York City comes alive as its boroughs are embodied by human avatars who must defend it."},
-    {"id": 7, "title": "Go Tell It on the Mountain", "authorId": 4, "genre": "Literary Fiction", "year": 1953, "description": "A semi-autobiographical novel about a young boy's spiritual awakening in 1930s Harlem."},
-    {"id": 8, "title": "Giovanni's Room", "authorId": 4, "genre": "Literary Fiction", "year": 1956, "description": "An American man in Paris grapples with his identity and a love affair with an Italian bartender."}
-  ]
-}
-```
-
-**Quick reference** (same data as above, in table form):
-
-| ID | Author | Books |
-|----|--------|-------|
-| 1 | Octavia Butler | Kindred (1979, Sci-Fi), Parable of the Sower (1993, Sci-Fi) |
-| 2 | Toni Morrison | Beloved (1987, Literary), Song of Solomon (1977, Literary) |
-| 3 | N.K. Jemisin | The Fifth Season (2015, Fantasy), The City We Became (2020, Urban Fantasy) |
-| 4 | James Baldwin | Go Tell It on the Mountain (1953, Literary), Giovanni's Room (1956, Literary) |
-
-### SQLite Data Sizes (v1, v2, v3)
-
-For all standard-level entries. The operator selects the data size at benchmark time.
+The operator selects the data size at benchmark time.
 
 | Size | Authors | Books | Purpose |
 |------|---------|-------|---------|
@@ -204,7 +155,7 @@ For all standard-level entries. The operator selects the data size at benchmark 
 | **medium** | 100 | 1,000 | Realistic API workload, serialization cost |
 | **large** | 500 | 50,000 | Stress test: memory, GC pressure, streaming |
 
-All three sizes are initialized from `db/schema.sql` + `db/seed-{size}.sql`. The small seed includes the 4 Hardcoded authors plus 4 more (Le Guin, Murakami, Adichie, Pratchett) and 16 total books.
+All three sizes are initialized from `db/schema.sql` + `db/seed-{size}.sql`. The small seed includes 8 authors (Butler, Morrison, Jemisin, Baldwin, Le Guin, Murakami, Adichie, Pratchett) and 16 total books.
 
 Medium and large are generated deterministically by `db/generate-seeds.py` (uses `random.Random(42)` for reproducibility). Regenerate with: `python3 db/generate-seeds.py`
 
@@ -269,7 +220,6 @@ The validator (`validate/validator.py`) is a zero-dependency Python script that 
 
 ```bash
 ./validate/run.sh http://localhost:8080                              # defaults: --level v3
-./validate/run.sh http://localhost:8080 --level hardcoded            # Hardcoded entries (4a/8b in-memory)
 ./validate/run.sh http://localhost:8080 --level v1                   # v1 with small seed
 ./validate/run.sh http://localhost:8080 --level v2                   # v2 with small seed
 ./validate/run.sh http://localhost:8080 --level v3                   # full contract with small seed
@@ -284,11 +234,10 @@ The most useful tool during development. Detects the highest level the API suppo
 ./validate/run.sh http://localhost:8080 --detect
 ```
 
-Runs Hardcoded tests first, then v1, v2, v3, stopping at the first failure:
+Runs v1, v2, v3, stopping at the first failure:
 
 ```
 === Auto-detecting level ===
-  Hardcoded (4 endpoints, in-memory) ... PASS (12/12)
   v1 (4 endpoints, SQLite) ............. PASS (12/12)
   v2 (+ filtering, search) ............ PASS (22/22)
   v3 (+ POST, stats, pagination) ...... FAIL (5/8)
@@ -301,19 +250,19 @@ Runs Hardcoded tests first, then v1, v2, v3, stopping at the first failure:
 
 ### Phases by Level
 
-| Phase | Hardcoded | v1 | v2 | v3 | What It Checks |
-|-------|:---------:|:--:|:--:|:--:|---------------|
-| 1. Smoke Test | ✓ | ✓ | ✓ | ✓ | API reachable, returns JSON, correct Content-Type |
-| 2. Read Correctness | ✓ | ✓ | ✓ | ✓ | All authors, each by ID, all books, each by ID, camelCase keys |
-| 3. Filter Correctness | | | ✓ | ✓ | Keyword on name/bio/title/genre/description; case insensitivity; year NOT searched |
-| 4. Search Correctness | | | ✓ | ✓ | GET /api/search returns authors and books; 400 for missing keyword |
-| 5. Relationship | | | ✓ | ✓ | GET /api/authors/{id}/books; 404 for missing author |
-| 6. Write Correctness | | | | ✓ | POST returns 201, generated ID, persistence; missing fields → 400; invalid author → 400 |
-| 7. Compute (Stats) | | | | ✓ | Correct totals, min/max year, average, booksByGenre, authorsByBookCount |
-| 8. Error Handling | ✓ | ✓ | ✓ | ✓ | 404 for missing resources, error field present in JSON |
-| 9. Pagination | | | | ✓ | Default page/limit, custom limit, page 2, beyond last page, totalPages |
+| Phase | v1 | v2 | v3 | What It Checks |
+|-------|:--:|:--:|:--:|---------------|
+| 1. Smoke Test | ✓ | ✓ | ✓ | API reachable, returns JSON, correct Content-Type |
+| 2. Read Correctness | ✓ | ✓ | ✓ | All authors, each by ID, all books, each by ID, camelCase keys |
+| 3. Filter Correctness | | ✓ | ✓ | Keyword on name/bio/title/genre/description; case insensitivity; year NOT searched |
+| 4. Search Correctness | | ✓ | ✓ | GET /api/search returns authors and books; 400 for missing keyword |
+| 5. Relationship | | ✓ | ✓ | GET /api/authors/{id}/books; 404 for missing author |
+| 6. Write Correctness | | | ✓ | POST returns 201, generated ID, persistence; missing fields → 400; invalid author → 400 |
+| 7. Compute (Stats) | | | ✓ | Correct totals, min/max year, average, booksByGenre, authorsByBookCount |
+| 8. Error Handling | ✓ | ✓ | ✓ | 404 for missing resources, error field present in JSON |
+| 9. Pagination | | | ✓ | Default page/limit, custom limit, page 2, beyond last page, totalPages |
 
-**Note:** The Hardcoded validator uses 4 authors / 8 books as expected values. The v1/v2/v3 validators use the small seed (8 authors / 16 books) as expected values.
+**Note:** The validator uses the small seed (8 authors / 16 books) as expected values.
 
 ---
 
@@ -325,7 +274,7 @@ Every entry lives in `entries/api-{language}-{framework}/` and must contain:
 - `Dockerfile` — Builds and runs on port 8080
 - `entry.yaml` — Metadata including level
 - `README.md` — Brief implementation description
-- `db/schema.sql` + `db/seed-small.sql` — Copied from repo root (v1/v2/v3 only, not Hardcoded)
+- `db/schema.sql` + `db/seed-small.sql` — Copied from repo root
 
 ### entry.yaml
 
@@ -334,12 +283,12 @@ framework: "Fiber"
 language: "Go"
 version: "2.52.5"
 author: "Your Name"
-level: "v3"                  # "hardcoded", "v1", "v2", or "v3"
+level: "v3"                  # "v1", "v2", or "v3"
 repo: ""                     # optional: link to source
 notes: ""                    # optional: implementation notes
 ```
 
-### Dockerfile Pattern (v1/v2/v3 — with SQLite)
+### Dockerfile Pattern
 ```dockerfile
 # Build stage
 FROM <build-image> AS build
@@ -355,21 +304,6 @@ COPY db/schema.sql db/seed-small.sql /app/db/
 RUN cat /app/db/schema.sql /app/db/seed-small.sql | sqlite3 /app/books.db
 COPY --from=build /app/<artifact> .
 ENV DB_PATH=/app/books.db
-EXPOSE 8080
-CMD ["./<binary>"]
-```
-
-### Dockerfile Pattern (Hardcoded — no database)
-```dockerfile
-FROM <build-image> AS build
-WORKDIR /app
-COPY . .
-RUN <build-commands>
-
-FROM <runtime-image>
-WORKDIR /app
-COPY --from=build /app/<artifact> .
-# No database — data is hardcoded in source (copied from db/hardcoded.json)
 EXPOSE 8080
 CMD ["./<binary>"]
 ```
@@ -390,8 +324,7 @@ All benchmarking is managed through the **Control Center** app (`control-center/
 - **Full mode** — 20,000 requests, 50 concurrency. ~90 seconds per entry. For official season results.
 
 ### Endpoints Benchmarked per Level
-- **Hardcoded**: 4 endpoints (GET authors, GET books, GET author by ID, GET book by ID)
-- **v1**: 4 endpoints (same as Hardcoded, but against SQLite)
+- **v1**: 4 endpoints (GET authors, GET books, GET author by ID, GET book by ID)
 - **v2**: 6 endpoints (v1 + search, author's books)
 - **v3**: 8 endpoints (v2 + POST books, stats)
 
@@ -403,8 +336,7 @@ All benchmarking is managed through the **Control Center** app (`control-center/
 - **Image size**: Docker image size in MB
 
 ### Competition Rules
-- **Hardcoded entries** compete only against other Hardcoded entries. Separate league entirely.
-- **v1/v2/v3 entries** compete against entries at the same level or higher, at the operator's chosen data size (small, medium, or large).
+- Entries compete against entries at the same level or higher, at the operator's chosen data size (small, medium, or large).
 - A v3 entry can compete in a v1 tournament (benchmarked on v1 endpoints only at the chosen data size).
 - A v1 entry cannot compete in a v2 or v3 tournament.
 - The operator selects **level** and **data size** when setting up a benchmark or tournament. The UI filters to show only eligible entries.
@@ -422,8 +354,8 @@ Contributors can use the Control Center's operator mode to run quick-mode benchm
 ### How Tournaments Work
 
 Each tournament is configured with:
-1. **Level** (Hardcoded, v1, v2, or v3) — which entries are eligible and which endpoints are benchmarked
-2. **Data size** (small, medium, or large) — for v1/v2/v3 only; Hardcoded always uses its fixed data
+1. **Level** (v1, v2, or v3) — which entries are eligible and which endpoints are benchmarked
+2. **Data size** (small, medium, or large)
 3. **Mode** (quick or full) — how many requests per benchmark
 4. **Winning metric** — what determines who advances (selected from dropdown)
 5. **Benchmark endpoint** — which specific endpoint's metric is used for scoring
@@ -482,8 +414,8 @@ Each tournament is configured with:
 - [x] CLAUDE.md (this file)
 - [ ] Repository structure (README, CONTRIBUTING, LICENSE, .github/)
 - [ ] SPEC.md (full API contract with v1, v2, v3 defined)
-- [ ] Database schema and all seed files (Hardcoded data documented, small/medium/large as SQL)
-- [ ] Validator with `--level hardcoded|v1|v2|v3` and `--detect` flags
+- [ ] Database schema and all seed files (small/medium/large as SQL)
+- [ ] Validator with `--level v1|v2|v3` and `--detect` flags
 - [ ] GitHub Actions CI workflow
 - [ ] First entry at **spec v1**: add one simple implementation to validate the pipeline end-to-end
 
@@ -500,7 +432,7 @@ Each tournament is configured with:
 ### Phase 2c: V3 Upgrade
 - [ ] Upgrade entries to **spec v3** (add SQLite, POST, stats, pagination)
 - [ ] Start with mainstream frameworks (Go, Rust, Node, Python, C#, Kotlin/JVM)
-- [ ] Leave exotic entries (COBOL, assembly, Lua) at Hardcoded — upgrade if feasible
+- [ ] Exotic entries (COBOL, assembly, Lua) must add SQLite support or be excluded
 - [ ] Validate each upgraded entry passes v3 validator
 
 ### Phase 3: Control Center App
@@ -613,7 +545,6 @@ docker run -p 8080:8080 api-your-framework
 ./validate/run.sh http://localhost:8080 --detect
 
 # 3. Or validate a specific level
-./validate/run.sh http://localhost:8080 --level hardcoded
 ./validate/run.sh http://localhost:8080 --level v1
 ./validate/run.sh http://localhost:8080 --level v2
 ./validate/run.sh http://localhost:8080 --level v3
@@ -634,7 +565,6 @@ The most useful tool during development. Run it after every change:
 ./validate/run.sh http://localhost:8080 --detect
 
 === Auto-detecting level ===
-  Hardcoded (4 endpoints, in-memory) ... PASS (12/12)
   v1 (4 endpoints, SQLite) ............. PASS (12/12)
   v2 (+ filtering, search) ............ PASS (22/22)
   v3 (+ POST, stats, pagination) ...... FAIL (5/8)
@@ -649,9 +579,9 @@ This tells you exactly where you are and what to fix next. You don't have to kno
 
 ### Development Order
 
-Most entries should **skip Hardcoded** and start at v1 with SQLite. Build incrementally, validating at each checkpoint:
+Start at v1 with SQLite. Build incrementally, validating at each checkpoint:
 
-**Checkpoint 1 → v1:** *(start here for most entries)*
+**Checkpoint 1 → v1:**
 1. Set up SQLite (copy `db/schema.sql` + `db/seed-small.sql`, initialize in Dockerfile)
 2. `GET /api/authors` (list all from database) — smoke test
 3. `GET /api/authors/{id}` — path params + 404 handling
@@ -672,8 +602,6 @@ Most entries should **skip Hardcoded** and start at v1 with SQLite. Build increm
 
 Each checkpoint produces a working, validatable, benchmarkable entry. You can stop at any checkpoint and submit.
 
-**For Hardcoded entries** (COBOL, assembly, etc.): Skip SQLite setup. Copy the data from `db/hardcoded.json` into your source code. Implement the 4 v1 endpoints. Validate with `--level hardcoded`. This is a dead-end path — you can't progress to v1/v2/v3 without adding SQLite.
-
 ---
 
 ## Working with Claude Code
@@ -681,16 +609,12 @@ Each checkpoint produces a working, validatable, benchmarkable entry. You can st
 When using Claude Code to implement entries:
 
 1. **Always read this file first** — it contains the complete spec summary, expected data, and entry requirements
-2. **Decide the target level** before writing any code:
-   - Exotic frameworks that can't do SQLite → `level: hardcoded`
-   - Most frameworks → start at `level: v1`, progress through v2 → v3 incrementally
-3. **Start with SQLite** unless the framework truly can't support it. Skip Hardcoded.
-4. **Reference spec/SPEC.md** for any ambiguity in endpoint behavior
-5. **For v1/v2/v3 entries**: copy `db/schema.sql` and `db/seed-small.sql` into the entry's `db/` directory
-5. **For Hardcoded entries**: copy the data from `db/hardcoded.json` into source code — do not retype it manually
-7. **Test with the validator** at each checkpoint: `./validate/run.sh http://localhost:8080 --detect`
-8. **Match JSON keys exactly** — `authorId` not `author_id`, `totalItems` not `total_items`
-9. **Set entry.yaml `level` correctly** — it must match what the entry actually implements
+2. **Decide the target level** before writing any code — start at `level: v1`, progress through v2 → v3 incrementally
+3. **Reference spec/SPEC.md** for any ambiguity in endpoint behavior
+4. **Copy `db/schema.sql` and `db/seed-small.sql`** into the entry's `db/` directory
+5. **Test with the validator** at each checkpoint: `./validate/run.sh http://localhost:8080 --detect`
+6. **Match JSON keys exactly** — `authorId` not `author_id`, `totalItems` not `total_items`
+7. **Set entry.yaml `level` correctly** — it must match what the entry actually implements
 
 ### Common Implementation Mistakes
 

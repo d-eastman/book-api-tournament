@@ -12,19 +12,17 @@ Every entry declares a single **level** in its `entry.yaml`. See CLAUDE.md for t
 
 | Level | Endpoints | Database | Data | Competes Against |
 |-------|-----------|----------|------|-----------------|
-| **Hardcoded** | 4 (basic GET) | None (in-memory) | 4 authors, 8 books fixed | Other Hardcoded only |
 | **v1** | 4 (basic GET) | SQLite | small / medium / large | v1+ at selected data size |
 | **v2** | 6 (+ filtering, search) | SQLite | small / medium / large | v2+ at selected data size |
 | **v3** | 8 (+ POST, stats, pagination) | SQLite | small / medium / large | v3 at selected data size |
 
-**Hardcoded is a separate league.** It cannot compete against v1/v2/v3 entries. The Control Center enforces this — when you select a level for a benchmark or tournament, only eligible entries are shown.
+When you select a level for a benchmark or tournament, only eligible entries are shown.
 
 ### Benchmarkable Endpoints per Level
 
 | Level | Endpoints Benchmarked | Count |
 |-------|----------------------|-------|
-| Hardcoded | GET /api/authors, GET /api/books, GET /api/authors/{id}, GET /api/books/{id} | 4 |
-| v1 | Same as Hardcoded (against SQLite) | 4 |
+| v1 | GET /api/authors, GET /api/books, GET /api/authors/{id}, GET /api/books/{id} | 4 |
 | v2 | v1 + GET /api/search?keyword=X, GET /api/authors/{id}/books | 6 |
 | v3 | v2 + POST /api/books, GET /api/stats | 8 |
 
@@ -153,7 +151,7 @@ Returns all entries scanned from the `entries/` directory with parsed `entry.yam
       id: "api-go-fiber",
       framework: "Fiber",
       language: "Go",
-      level: "v3",              // "hardcoded", "v1", "v2", or "v3"
+      level: "v3",              // "v1", "v2", or "v3"
       version: "2.52.5",
       author: "maintainer",
       path: "entries/api-go-fiber",
@@ -166,13 +164,12 @@ Returns all entries scanned from the `entries/` directory with parsed `entry.yam
 ```
 
 Query params for filtering:
-- `?level=hardcoded` — only Hardcoded entries
-- `?level=v1` — entries at v1 or higher (excludes Hardcoded)
+- `?level=v1` — entries at v1 or higher
 - `?level=v2` — entries at v2 or higher
 - `?level=v3` — only v3 entries
 - `?sort=language` or `?sort=framework`
 
-**Important:** When `?level=hardcoded`, data size selection is hidden in the UI (Hardcoded always uses fixed data). For all other levels, the operator also selects a data size (small, medium, large).
+The operator also selects a data size (small, medium, large).
 
 ### Container Lifecycle
 
@@ -217,8 +214,8 @@ Stops and removes all tournament-managed containers.
 ```
 Runs a benchmark against a single entry. Full lifecycle: build → start → health check → warmup → benchmark → stop.
 
-- `level`: determines which endpoints are benchmarked. For Hardcoded entries, `dataSize` is ignored.
-- `dataSize`: "small", "medium", or "large" (v1/v2/v3 only). Determines which seed SQL is used.
+- `level`: determines which endpoints are benchmarked.
+- `dataSize`: "small", "medium", or "large". Determines which seed SQL is used.
 - `mode: "quick"` — 2,000 requests, 20 concurrency
 - `mode: "full"` — 20,000 requests, 50 concurrency
 - `endpoints`: optional, defaults to all endpoints for the level
@@ -276,8 +273,6 @@ Returns current benchmark state: idle, building, warming up, benchmarking (entry
 ```
 
 Creates a tournament bracket. Randomizes entries into the next power-of-2 bracket with random byes. Does NOT start benchmarking — just sets up the bracket structure.
-
-For Hardcoded tournaments: `dataSize` is omitted or ignored. `level` must be `"hardcoded"`. Only Hardcoded entries are eligible.
 
 Response:
 ```json
@@ -384,7 +379,6 @@ The day-to-day benchmarking control panel. Functional, information-dense, no the
 │  │ ☑ C#        api-csharp-minimal       v3                  │  │
 │  │ ☑ C#        api-csharp-webapi        v3                  │  │
 │  │ ☐ Clojure   api-clojure-ring-reitit  v2                  │  │
-│  │ ☐ COBOL     api-cobol-wheelchair     hardcoded  (ineligible) │
 │  │ ☑ Go        api-go-fiber             v3                  │  │
 │  │ ☑ Go        api-go-nethttp           v3                  │  │
 │  │ ...                                                      │  │
@@ -414,9 +408,6 @@ The day-to-day benchmarking control panel. Functional, information-dense, no the
 
 **Key behaviors:**
 - Changing level filters the entry list to only show eligible entries
-- Selecting "hardcoded" hides the data size dropdown (fixed data)
-- Selecting v1/v2/v3 shows the data size dropdown (small/medium/large)
-- Hardcoded entries are grayed out and marked "(ineligible)" when a v1+ level is selected
 - "Run Benchmarks" processes entries sequentially with full container lifecycle
 - Progress shows current entry, current endpoint, spinner
 - Results table is sortable by any column
@@ -679,7 +670,7 @@ timestamp,name,entryId,language,framework,level,dataSize,mode,endpoint,reqPerSec
 2026-03-11T14:30:00Z,Season 1,api-go-fiber,Go,Fiber,v2,small,full,search,38500,1.31,1.10,2.35,3.72,147,4.9,14.6,5
 ```
 
-One row per entry per endpoint. Startup, memory, and image size are repeated on each row for that entry (denormalized for easy analysis). For Hardcoded entries, `dataSize` is "hardcoded".
+One row per entry per endpoint. Startup, memory, and image size are repeated on each row for that entry (denormalized for easy analysis).
 
 ### CSV Format — Tournament Results
 
@@ -730,7 +721,6 @@ All files are gitignored until explicitly saved, then the user commits them to t
 
 ### Phase B: Operator Page
 - [ ] Entry selector with level filtering and data size selection
-- [ ] Hardcoded level hides data size dropdown
 - [ ] Ineligible entries grayed out with explanation
 - [ ] Benchmark configuration panel (level, data size, mode)
 - [ ] Run button with progress spinner

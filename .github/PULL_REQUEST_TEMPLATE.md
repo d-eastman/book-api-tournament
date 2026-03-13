@@ -1,7 +1,7 @@
 ## New Entry Submission
 
 **Entry directory:** `entries/api-{language}-{framework}/`
-**Level:** hardcoded / v1 / v2 / v3
+**Level:** v1 / v2 / v3
 
 ### Checklist
 

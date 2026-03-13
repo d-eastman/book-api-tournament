@@ -34,24 +34,3 @@ ENV DB_PATH=/app/books.db
 EXPOSE 8080
 
 CMD ["./<binary>"]
-
-# ============================================================
-# Hardcoded Variant (no database)
-# ============================================================
-# Use this pattern for entries that cannot connect to SQLite
-# (e.g., COBOL, assembly) or minimal proof-of-concept entries.
-# Data is hardcoded directly in source code (4 authors, 8 books).
-# Hardcoded entries can only compete against other Hardcoded entries.
-#
-# FROM <build-image> AS build
-# WORKDIR /app
-# COPY . .
-# RUN <install-dependencies>
-# RUN <build-command>
-#
-# FROM <runtime-image>
-# WORKDIR /app
-# COPY --from=build /app/<artifact> .
-# # No database — data is hardcoded in source
-# EXPOSE 8080
-# CMD ["./<binary>"]

@@ -14,11 +14,10 @@ The project serves three purposes:
 
 ## Entry Levels
 
-Entries implement one of four levels, each building on the last:
+Entries implement one of three levels, each building on the last:
 
 | Level | Endpoints | Database | Description |
 |-------|-----------|----------|-------------|
-| **Hardcoded** | 4 | None | Proof-of-concept with in-memory data. Dead-end path. |
 | **v1** | 4 | SQLite | Recommended starting point. Basic CRUD reads. |
 | **v2** | 6 | SQLite | Adds filtering, search, and author-books relationship. |
 | **v3** | 8 | SQLite | Full contract: writes, pagination, and aggregate stats. |
@@ -33,7 +32,7 @@ See [spec/SPEC.md](spec/SPEC.md) for the complete API contract.
 mkdir entries/api-{language}-{framework}
 cd entries/api-{language}-{framework}
 
-# Copy database files (skip for Hardcoded entries)
+# Copy database files
 mkdir db
 cp ../../db/schema.sql db/
 cp ../../db/seed-small.sql db/

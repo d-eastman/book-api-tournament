@@ -41,10 +41,9 @@ This document is the **single source of truth** for the Book API contract. All i
 
 ## 3. Levels
 
-Every entry implements one of four levels. Levels are strictly cumulative: v2 includes all of v1, and v3 includes all of v1 and v2.
+Every entry implements one of three levels. Levels are strictly cumulative: v2 includes all of v1, and v3 includes all of v1 and v2.
 
-- **Hardcoded** -- Special case for frameworks that cannot connect to SQLite. Data is hardcoded in source (4 authors, 8 books). Implements the 4 base endpoints only. Dead-end level; cannot progress to v1/v2/v3.
-- **v1** -- Starting point for standard entries. Four endpoints backed by SQLite. Benchmarked at small, medium, or large data sizes.
+- **v1** -- Starting point. Four endpoints backed by SQLite. Benchmarked at small, medium, or large data sizes.
 - **v2** -- Adds filtering, search, and the author-books relationship to v1. Six endpoints total. Still read-only.
 - **v3** -- Full contract. Adds writes (POST), aggregate statistics, and pagination. Eight endpoints total.
 
@@ -56,7 +55,7 @@ See `CLAUDE.md` for the full level comparison table, entry requirements, and com
 
 ### 4.1 Base Endpoints (All Levels)
 
-These four endpoints are required at every level: Hardcoded, v1, v2, and v3.
+These four endpoints are required at every level: v1, v2, and v3.
 
 #### GET /api/authors
 
@@ -88,10 +87,10 @@ Returns a single author by ID.
 
 Returns all books. The response format depends on the level:
 
-- **Hardcoded, v1, v2:** Flat JSON array of all books.
+- **v1, v2:** Flat JSON array of all books.
 - **v3 (without keyword):** Paginated response object (see section 4.3).
 
-**Response (Hardcoded, v1, v2):** `200 OK`
+**Response (v1, v2):** `200 OK`
 ```json
 [
   {"id": 1, "title": "Kindred", "authorId": 1, "genre": "Science Fiction", "year": 1979, "description": "A modern..."},
@@ -339,8 +338,6 @@ Filtering applies to v2 and v3 endpoints that accept a `keyword` query parameter
 ---
 
 ## 7. Database Configuration
-
-Applies to v1, v2, and v3 entries only. Hardcoded entries have no database.
 
 - **Engine:** SQLite
 - **Path:** Configured via the `DB_PATH` environment variable. Default: `/app/books.db`.

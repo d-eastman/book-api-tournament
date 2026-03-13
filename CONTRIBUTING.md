@@ -29,12 +29,11 @@ Every entry declares a level that defines what it implements. Levels are cumulat
 
 | Level | What You Implement |
 |-------|--------------------|
-| **Hardcoded** | 4 GET endpoints with data hardcoded in source. No database. For exotic frameworks that cannot use SQLite. This is a dead end — Hardcoded entries cannot progress to v1/v2/v3. |
 | **v1** | 4 GET endpoints backed by SQLite. The recommended starting point. |
 | **v2** | v1 + keyword filtering, author-books relationship, combined search (6 endpoints). |
 | **v3** | v2 + POST /api/books, GET /api/stats, pagination on GET /api/books (8 endpoints). |
 
-Most entries should start at v1 and work up. Read [spec/SPEC.md](spec/SPEC.md) for the full API contract.
+Start at v1 and work up. Read [spec/SPEC.md](spec/SPEC.md) for the full API contract.
 
 ### 4. Implement the API
 
@@ -75,22 +74,6 @@ EXPOSE 8080
 CMD ["./<binary>"]
 ```
 
-**For Hardcoded entries (no database):**
-
-```dockerfile
-FROM <build-image> AS build
-WORKDIR /app
-COPY . .
-RUN <build-commands>
-
-FROM <runtime-image>
-WORKDIR /app
-COPY --from=build /app/<artifact> .
-# No database — data is hardcoded in source
-EXPOSE 8080
-CMD ["./<binary>"]
-```
-
 #### `entry.yaml`
 
 ```yaml
@@ -98,7 +81,7 @@ framework: "Fiber"
 language: "Go"
 version: "2.52.5"
 author: "Your Name"
-level: "v3"                  # "hardcoded", "v1", "v2", or "v3"
+level: "v3"                  # "v1", "v2", or "v3"
 repo: ""                     # optional: link to source
 notes: ""                    # optional: implementation notes
 ```
@@ -118,8 +101,6 @@ mkdir entries/api-your-framework/db
 cp db/schema.sql entries/api-your-framework/db/
 cp db/seed-small.sql entries/api-your-framework/db/
 ```
-
-Hardcoded entries do not need these files.
 
 ### 6. Validate your entry
 

@@ -23,7 +23,7 @@ The glossary tooltip system is implemented and wired into the Control Center UI.
 | 3 | src/client/components/BenchmarkConfig.tsx | Wrapped Quick/Full mode radio labels |
 | 4 | src/client/components/MatchupCard.tsx | Wrapped metric label in matchup header |
 | 5 | src/client/components/BracketView.tsx | Wrapped "BYE" labels in bracket slots |
-| 6 | src/client/pages/LandingPage.tsx | Wrapped level badges (hardcoded, v1, v2, v3) in entries overview |
+| 6 | src/client/pages/LandingPage.tsx | Wrapped level badges (v1, v2, v3) in entries overview |
 | 7 | src/client/pages/TournamentPage.tsx | Wrapped level display in tournament info bar |
 
 ---
@@ -51,8 +51,8 @@ concurrency, warmup, quick mode, full mode
 ### Tournament Concepts (3)
 bye, bracket, single elimination
 
-### Levels (4)
-hardcoded, v1, v2, v3
+### Levels (3)
+v1, v2, v3
 
 ---
 

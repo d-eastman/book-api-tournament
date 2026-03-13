@@ -38,13 +38,10 @@ export function scanEntries(): Entry[] {
 
 // Filter entries eligible for a given level
 export function filterByLevel(entries: Entry[], level: string): Entry[] {
-  const levelOrder = ['hardcoded', 'v1', 'v2', 'v3'];
-  if (level === 'hardcoded') {
-    return entries.filter(e => e.level === 'hardcoded');
-  }
+  const levelOrder = ['v1', 'v2', 'v3'];
   const minIdx = levelOrder.indexOf(level);
   return entries.filter(e => {
     const entryIdx = levelOrder.indexOf(e.level);
-    return e.level !== 'hardcoded' && entryIdx >= minIdx;
+    return entryIdx >= minIdx;
   });
 }

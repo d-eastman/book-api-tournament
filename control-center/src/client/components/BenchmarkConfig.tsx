@@ -11,16 +11,6 @@ export function BenchmarkConfig({ config, onChange }: Props) {
   const set = (partial: Partial<Config>) =>
     onChange({ ...config, ...partial });
 
-  const handleLevelChange = (newLevel: Config["level"]) => {
-    const updates: Partial<Config> = { level: newLevel };
-    if (newLevel === "hardcoded") {
-      updates.dataSize = "hardcoded";
-    } else if (config.dataSize === "hardcoded") {
-      updates.dataSize = "small";
-    }
-    onChange({ ...config, ...updates });
-  };
-
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
       <div>
@@ -28,11 +18,10 @@ export function BenchmarkConfig({ config, onChange }: Props) {
         <select
           value={config.level}
           onChange={(e) =>
-            handleLevelChange(e.target.value as Config["level"])
+            set({ level: e.target.value as Config["level"] })
           }
           className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm text-gray-100"
         >
-          <option value="hardcoded">Hardcoded</option>
           <option value="v1">v1</option>
           <option value="v2">v2</option>
           <option value="v3">v3</option>
@@ -46,18 +35,11 @@ export function BenchmarkConfig({ config, onChange }: Props) {
           onChange={(e) =>
             set({ dataSize: e.target.value as Config["dataSize"] })
           }
-          disabled={config.level === "hardcoded"}
-          className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm text-gray-100 disabled:opacity-50"
+          className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm text-gray-100"
         >
-          {config.level === "hardcoded" ? (
-            <option value="hardcoded">Hardcoded (4a/8b)</option>
-          ) : (
-            <>
-              <option value="small">Small (8a/16b)</option>
-              <option value="medium">Medium (100a/1Kb)</option>
-              <option value="large">Large (500a/50Kb)</option>
-            </>
-          )}
+          <option value="small">Small (8a/16b)</option>
+          <option value="medium">Medium (100a/1Kb)</option>
+          <option value="large">Large (500a/50Kb)</option>
         </select>
       </div>
 

@@ -19,15 +19,8 @@ export function TournamentPage() {
   const [level, setLevel] = useState("v3");
   const [dataSize, setDataSize] = useState("small");
 
-  // When level changes, sync dataSize accordingly
   const handleLevelChange = (newLevel: string) => {
     setLevel(newLevel);
-    if (newLevel === "hardcoded") {
-      setDataSize("hardcoded");
-    } else if (dataSize === "hardcoded") {
-      setDataSize("small");
-    }
-    // Reset endpoint to first available (or "all") for the new level
     setBenchEndpoint("all");
   };
   const [mode, setMode] = useState<"quick" | "full">("quick");
@@ -57,7 +50,6 @@ export function TournamentPage() {
   }, []);
 
   const filteredEntries = entries.filter((e) => {
-    if (level === "hardcoded") return e.level === "hardcoded";
     const levels = ["v1", "v2", "v3"];
     return levels.indexOf(e.level) >= levels.indexOf(level);
   });
@@ -173,7 +165,6 @@ export function TournamentPage() {
                   onChange={(e) => handleLevelChange(e.target.value)}
                   className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm text-gray-100"
                 >
-                  <option value="hardcoded">Hardcoded</option>
                   <option value="v1">v1</option>
                   <option value="v2">v2</option>
                   <option value="v3">v3</option>
@@ -184,18 +175,11 @@ export function TournamentPage() {
                 <select
                   value={dataSize}
                   onChange={(e) => setDataSize(e.target.value)}
-                  disabled={level === "hardcoded"}
-                  className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm text-gray-100 disabled:opacity-50"
+                  className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm text-gray-100"
                 >
-                  {level === "hardcoded" ? (
-                    <option value="hardcoded">Hardcoded (4a/8b)</option>
-                  ) : (
-                    <>
-                      <option value="small">Small (8a/16b)</option>
-                      <option value="medium">Medium (100a/1Kb)</option>
-                      <option value="large">Large (500a/50Kb)</option>
-                    </>
-                  )}
+                  <option value="small">Small (8a/16b)</option>
+                  <option value="medium">Medium (100a/1Kb)</option>
+                  <option value="large">Large (500a/50Kb)</option>
                 </select>
               </div>
               <div>
