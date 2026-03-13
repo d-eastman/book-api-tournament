@@ -52,83 +52,32 @@ book-api-tournament/
 
 ---
 
-## Entry Levels
+## API Endpoints
 
-Every entry has a single **level** that defines what it implements and how it competes. Levels are strictly cumulative — a v2 entry implements everything in v1, and a v3 entry implements everything in v1 and v2.
+Every entry implements all 8 endpoints, backed by SQLite.
 
-There are three levels that form the normal progression. All entries must use SQLite.
-
-### Level: v1 *(starting point)*
-
-The recommended starting point for all entries. Four endpoints backed by SQLite. This is where most entries should begin before adding filtering and search.
-
-**Endpoints (4):**
+**Endpoints (8):**
 - `GET /api/authors` — All authors (flat array)
 - `GET /api/authors/{id}` — Single author (404 if not found)
-- `GET /api/books` — All books (flat array)
-- `GET /api/books/{id}` — Single book (404 if not found)
-
-**Data:** SQLite database initialized from `db/schema.sql` + `db/seed-{size}.sql`. Can be benchmarked at small, medium, or large data sizes.
-
-**Competes against:** v1+ entries at the selected data size.
-
-### Level: v2 *(standard — filtering and search)*
-
-Adds filtering, search, and the author-books relationship to v1. Still read-only.
-
-**Adds to v1 (6 total):**
 - `GET /api/authors?keyword=X` — Optional filter on `name`, `bio`
 - `GET /api/authors/{id}/books` — Books by author (404 if author not found)
-- `GET /api/books?keyword=X` — Optional filter on `title`, `genre`, `description`
+- `GET /api/books` — All books (paginated response: `{data, page, limit, totalItems, totalPages}` with `?page=1&limit=20` defaults)
+- `GET /api/books/{id}` — Single book (404 if not found)
+- `GET /api/books?keyword=X` — Optional filter on `title`, `genre`, `description` (returns flat array, not paginated)
 - `GET /api/search?keyword=X` — Combined search across authors and books (400 if keyword missing)
-
-**Filtering rules:**
-- Case-insensitive substring matching on specified fields only
-- `year` and `id` fields are **never searched** by keyword filters
-- Non-matching filters return **200 with empty array**, not 404
-- `GET /api/books` returns a **flat array** (no pagination in v2)
-
-**Data:** SQLite. Benchmarked at small, medium, or large.
-
-**Competes against:** v2+ entries at the selected data size.
-
-### Level: v3 *(standard — full contract)*
-
-The complete API with writes, computation, and pagination.
-
-**Adds to v2 (8 total):**
 - `POST /api/books` — Create a book with validation (201 on success, 400 on validation failure)
   - Required fields: `title`, `authorId`, `genre`, `year`, `description`
   - Validates: all fields present, authorId exists, year between 1000-9999
 - `GET /api/stats` — Aggregate statistics (totalAuthors, totalBooks, earliestYear, latestYear, averageYear, booksByGenre, authorsByBookCount)
 
-**Changes from v2:**
-- `GET /api/books` (without keyword) now returns a **paginated response**: `{data, page, limit, totalItems, totalPages}` with `?page=1&limit=20` defaults
-- `GET /api/books?keyword=X` still returns a **flat array** (no pagination wrapper)
+**Filtering rules:**
+- Case-insensitive substring matching on specified fields only
+- `year` and `id` fields are **never searched** by keyword filters
+- Non-matching filters return **200 with empty array**, not 404
 
-**Data:** SQLite. Benchmarked at small, medium, or large.
+**Data:** SQLite database initialized from `db/schema.sql` + `db/seed-{size}.sql`. Benchmarked at small, medium, or large data sizes.
 
-**Competes against:** v3 entries at the selected data size.
-
-### Level Comparison
-
-| | v1 | v2 | v3 |
-|---|:---:|:---:|:---:|
-| GET /api/authors | ✓ | ✓ | ✓ |
-| GET /api/authors/{id} | ✓ | ✓ | ✓ |
-| GET /api/books | ✓ | ✓ | ✓ (paginated) |
-| GET /api/books/{id} | ✓ | ✓ | ✓ |
-| GET /api/authors?keyword= | | ✓ | ✓ |
-| GET /api/authors/{id}/books | | ✓ | ✓ |
-| GET /api/books?keyword= | | ✓ | ✓ |
-| GET /api/search?keyword= | | ✓ | ✓ |
-| POST /api/books | | | ✓ |
-| GET /api/stats | | | ✓ |
-| Database | SQLite | SQLite | SQLite |
-| Data sizes | small/med/lg | small/med/lg | small/med/lg |
-| Benchmarked endpoints | 4 | 6 | 8 |
-
-### Rules (all levels)
+### Rules
 - All JSON uses **camelCase** keys (`authorId`, not `author_id`)
 - Error responses always use shape: `{"error": "message"}`
 - Content-Type is always `application/json`
@@ -219,48 +168,23 @@ Medium and large are generated deterministically by `db/generate-seeds.py` (uses
 The validator (`validate/validator.py`) is a zero-dependency Python script that tests an API for spec compliance.
 
 ```bash
-./validate/run.sh http://localhost:8080                              # defaults: --level v3
-./validate/run.sh http://localhost:8080 --level v1                   # v1 with small seed
-./validate/run.sh http://localhost:8080 --level v2                   # v2 with small seed
-./validate/run.sh http://localhost:8080 --level v3                   # full contract with small seed
+./validate/run.sh http://localhost:8080                              # run all tests
 ./validate/run.sh http://localhost:8080 --verbose                    # show individual tests
 ```
 
-### Auto-Detection Mode
+### Validator Phases
 
-The most useful tool during development. Detects the highest level the API supports:
-
-```bash
-./validate/run.sh http://localhost:8080 --detect
-```
-
-Runs v1, v2, v3, stopping at the first failure:
-
-```
-=== Auto-detecting level ===
-  v1 (4 endpoints, SQLite) ............. PASS (12/12)
-  v2 (+ filtering, search) ............ PASS (22/22)
-  v3 (+ POST, stats, pagination) ...... FAIL (5/8)
-    ✗ POST /api/books with missing title: expected 400, got 500
-    ✗ GET /api/stats averageYear: expected 1987.25, got 1987
-
-  Detected level: v2
-  To reach v3, fix the 2 failures above.
-```
-
-### Phases by Level
-
-| Phase | v1 | v2 | v3 | What It Checks |
-|-------|:--:|:--:|:--:|---------------|
-| 1. Smoke Test | ✓ | ✓ | ✓ | API reachable, returns JSON, correct Content-Type |
-| 2. Read Correctness | ✓ | ✓ | ✓ | All authors, each by ID, all books, each by ID, camelCase keys |
-| 3. Filter Correctness | | ✓ | ✓ | Keyword on name/bio/title/genre/description; case insensitivity; year NOT searched |
-| 4. Search Correctness | | ✓ | ✓ | GET /api/search returns authors and books; 400 for missing keyword |
-| 5. Relationship | | ✓ | ✓ | GET /api/authors/{id}/books; 404 for missing author |
-| 6. Write Correctness | | | ✓ | POST returns 201, generated ID, persistence; missing fields → 400; invalid author → 400 |
-| 7. Compute (Stats) | | | ✓ | Correct totals, min/max year, average, booksByGenre, authorsByBookCount |
-| 8. Error Handling | ✓ | ✓ | ✓ | 404 for missing resources, error field present in JSON |
-| 9. Pagination | | | ✓ | Default page/limit, custom limit, page 2, beyond last page, totalPages |
+| Phase | What It Checks |
+|-------|---------------|
+| 1. Smoke Test | API reachable, returns JSON, correct Content-Type |
+| 2. Read Correctness | All authors, each by ID, all books, each by ID, camelCase keys |
+| 3. Filter Correctness | Keyword on name/bio/title/genre/description; case insensitivity; year NOT searched |
+| 4. Search Correctness | GET /api/search returns authors and books; 400 for missing keyword |
+| 5. Relationship | GET /api/authors/{id}/books; 404 for missing author |
+| 6. Write Correctness | POST returns 201, generated ID, persistence; missing fields → 400; invalid author → 400 |
+| 7. Compute (Stats) | Correct totals, min/max year, average, booksByGenre, authorsByBookCount |
+| 8. Error Handling | 404 for missing resources, error field present in JSON |
+| 9. Pagination | Default page/limit, custom limit, page 2, beyond last page, totalPages |
 
 **Note:** The validator uses the small seed (8 authors / 16 books) as expected values.
 
@@ -272,7 +196,7 @@ Every entry lives in `entries/api-{language}-{framework}/` and must contain:
 
 ### Required Files
 - `Dockerfile` — Builds and runs on port 8080
-- `entry.yaml` — Metadata including level
+- `entry.yaml` — Metadata
 - `README.md` — Brief implementation description
 - `db/schema.sql` + `db/seed-small.sql` — Copied from repo root
 
@@ -283,7 +207,6 @@ framework: "Fiber"
 language: "Go"
 version: "2.52.5"
 author: "Your Name"
-level: "v3"                  # "v1", "v2", or "v3"
 repo: ""                     # optional: link to source
 notes: ""                    # optional: implementation notes
 ```
@@ -323,10 +246,8 @@ All benchmarking is managed through the **Control Center** app (`control-center/
 - **Quick mode** — 2,000 requests, 20 concurrency. ~15 seconds per entry. For smoke tests, development, and tournament matchups.
 - **Full mode** — 20,000 requests, 50 concurrency. ~90 seconds per entry. For official season results.
 
-### Endpoints Benchmarked per Level
-- **v1**: 4 endpoints (GET authors, GET books, GET author by ID, GET book by ID)
-- **v2**: 6 endpoints (v1 + search, author's books)
-- **v3**: 8 endpoints (v2 + POST books, stats)
+### Endpoints Benchmarked
+All 8 endpoints: GET authors, GET books, GET author by ID, GET book by ID, search, author's books, POST books, stats.
 
 ### Metrics Captured
 - **Throughput**: requests/second per endpoint
@@ -336,10 +257,8 @@ All benchmarking is managed through the **Control Center** app (`control-center/
 - **Image size**: Docker image size in MB
 
 ### Competition Rules
-- Entries compete against entries at the same level or higher, at the operator's chosen data size (small, medium, or large).
-- A v3 entry can compete in a v1 tournament (benchmarked on v1 endpoints only at the chosen data size).
-- A v1 entry cannot compete in a v2 or v3 tournament.
-- The operator selects **level** and **data size** when setting up a benchmark or tournament. The UI filters to show only eligible entries.
+- All entries implement the same spec and compete against each other.
+- The operator selects **data size** when setting up a benchmark or tournament.
 
 ### Who Runs Official Benchmarks
 **Only the maintainer.** Contributors submit code, the maintainer benchmarks on controlled hardware. Self-reported benchmarks are not accepted for official season results.
@@ -354,8 +273,7 @@ Contributors can use the Control Center's operator mode to run quick-mode benchm
 ### How Tournaments Work
 
 Each tournament is configured with:
-1. **Level** (v1, v2, or v3) — which entries are eligible and which endpoints are benchmarked
-2. **Data size** (small, medium, or large)
+1. **Data size** (small, medium, or large)
 3. **Mode** (quick or full) — how many requests per benchmark
 4. **Winning metric** — what determines who advances (selected from dropdown)
 5. **Benchmark endpoint** — which specific endpoint's metric is used for scoring
@@ -413,27 +331,17 @@ Each tournament is configured with:
 ### Phase 1: Foundation (current)
 - [x] CLAUDE.md (this file)
 - [ ] Repository structure (README, CONTRIBUTING, LICENSE, .github/)
-- [ ] SPEC.md (full API contract with v1, v2, v3 defined)
+- [ ] SPEC.md (full API contract)
 - [ ] Database schema and all seed files (small/medium/large as SQL)
-- [ ] Validator with `--level v1|v2|v3` and `--detect` flags
+- [ ] Validator
 - [ ] GitHub Actions CI workflow
-- [ ] First entry at **spec v1**: add one simple implementation to validate the pipeline end-to-end
+- [ ] First entry: add one simple implementation to validate the pipeline end-to-end
 
-### Phase 2a: V1 Migration
-- [ ] Migrate existing 44 implementations into `entries/` at **spec v1** (bare minimum: 4 GET endpoints)
-- [ ] Validate each entry passes v1 validator
-- [ ] This is the fastest path to getting all entries into the repo
-
-### Phase 2b: V2 Upgrade
-- [ ] Upgrade entries to **spec v2** (add filtering, search, author-books relationship)
-- [ ] All entries that currently have filtering can be upgraded immediately
-- [ ] Validate each upgraded entry passes v2 validator
-
-### Phase 2c: V3 Upgrade
-- [ ] Upgrade entries to **spec v3** (add SQLite, POST, stats, pagination)
+### Phase 2: Migration
+- [ ] Migrate existing 44 implementations into `entries/` with full spec (all 8 endpoints)
+- [ ] Validate each entry passes the validator
 - [ ] Start with mainstream frameworks (Go, Rust, Node, Python, C#, Kotlin/JVM)
 - [ ] Exotic entries (COBOL, assembly, Lua) must add SQLite support or be excluded
-- [ ] Validate each upgraded entry passes v3 validator
 
 ### Phase 3: Control Center App
 - [ ] Hono backend (Docker lifecycle, benchmark runner, results store)
@@ -541,15 +449,10 @@ cd entries/api-your-framework
 docker build -t api-your-framework .
 docker run -p 8080:8080 api-your-framework
 
-# 2. Auto-detect which level your API reaches (in another terminal)
-./validate/run.sh http://localhost:8080 --detect
+# 2. Validate (in another terminal)
+./validate/run.sh http://localhost:8080
 
-# 3. Or validate a specific level
-./validate/run.sh http://localhost:8080 --level v1
-./validate/run.sh http://localhost:8080 --level v2
-./validate/run.sh http://localhost:8080 --level v3
-
-# 4. Quick-mode self-benchmark (for your own reference, not official results)
+# 3. Quick-mode self-benchmark (for your own reference, not official results)
 #    Use the Control Center UI:
 cd control-center
 npm run dev
@@ -557,50 +460,20 @@ npm run dev
 #    Select your entry, choose Quick mode, click Run
 ```
 
-### The --detect Flag
-
-The most useful tool during development. Run it after every change:
-
-```
-./validate/run.sh http://localhost:8080 --detect
-
-=== Auto-detecting level ===
-  v1 (4 endpoints, SQLite) ............. PASS (12/12)
-  v2 (+ filtering, search) ............ PASS (22/22)
-  v3 (+ POST, stats, pagination) ...... FAIL (5/8)
-    ✗ POST /api/books with missing title: expected 400, got 500
-    ✗ GET /api/stats averageYear: expected 1987.25, got 1987
-
-  Detected level: v2
-  To reach v3, fix the 2 failures above.
-```
-
-This tells you exactly where you are and what to fix next. You don't have to know the spec by heart — the validator tells you what's wrong.
-
 ### Development Order
 
-Start at v1 with SQLite. Build incrementally, validating at each checkpoint:
+Build incrementally, running `./validate/run.sh http://localhost:8080 --verbose` after each step:
 
-**Checkpoint 1 → v1:**
 1. Set up SQLite (copy `db/schema.sql` + `db/seed-small.sql`, initialize in Dockerfile)
 2. `GET /api/authors` (list all from database) — smoke test
 3. `GET /api/authors/{id}` — path params + 404 handling
 4. `GET /api/books` and `GET /api/books/{id}` — second resource + camelCase `authorId`
-5. Validate: `./validate/run.sh http://localhost:8080 --level v1`
-
-**Checkpoint 2 → v2:**
-6. `GET /api/authors?keyword=X` and `GET /api/books?keyword=X` — optional keyword filtering
-7. `GET /api/authors/{id}/books` — relationship query + 404 if author missing
-8. `GET /api/search?keyword=X` — combined search + 400 for missing keyword
-9. Validate: `./validate/run.sh http://localhost:8080 --level v2`
-
-**Checkpoint 3 → v3:**
-10. Pagination on `GET /api/books` — paginated wrapper object when no keyword
-11. `POST /api/books` — request body parsing, validation rules, 201 response
-12. `GET /api/stats` — aggregation queries (totalAuthors, booksByGenre, etc.)
-13. Validate: `./validate/run.sh http://localhost:8080 --level v3`
-
-Each checkpoint produces a working, validatable, benchmarkable entry. You can stop at any checkpoint and submit.
+5. `GET /api/authors?keyword=X` and `GET /api/books?keyword=X` — optional keyword filtering
+6. `GET /api/authors/{id}/books` — relationship query + 404 if author missing
+7. `GET /api/search?keyword=X` — combined search + 400 for missing keyword
+8. Pagination on `GET /api/books` — paginated wrapper object when no keyword
+9. `POST /api/books` — request body parsing, validation rules, 201 response
+10. `GET /api/stats` — aggregation queries (totalAuthors, booksByGenre, etc.)
 
 ---
 
@@ -609,27 +482,25 @@ Each checkpoint produces a working, validatable, benchmarkable entry. You can st
 When using Claude Code to implement entries:
 
 1. **Always read this file first** — it contains the complete spec summary, expected data, and entry requirements
-2. **Decide the target level** before writing any code — start at `level: v1`, progress through v2 → v3 incrementally
-3. **Reference spec/SPEC.md** for any ambiguity in endpoint behavior
-4. **Copy `db/schema.sql` and `db/seed-small.sql`** into the entry's `db/` directory
-5. **Test with the validator** at each checkpoint: `./validate/run.sh http://localhost:8080 --detect`
-6. **Match JSON keys exactly** — `authorId` not `author_id`, `totalItems` not `total_items`
-7. **Set entry.yaml `level` correctly** — it must match what the entry actually implements
+2. **Reference spec/SPEC.md** for any ambiguity in endpoint behavior
+3. **Copy `db/schema.sql` and `db/seed-small.sql`** into the entry's `db/` directory
+4. **Test with the validator**: `./validate/run.sh http://localhost:8080 --verbose`
+5. **Match JSON keys exactly** — `authorId` not `author_id`, `totalItems` not `total_items`
 
 ### Common Implementation Mistakes
 
-**All levels:**
+**General:**
 - Returning `author_id` instead of `authorId` in JSON
 - Content-Type not set to `application/json`
 - Error responses not using `{"error": "message"}` shape
 
-**v2+ (filtering):**
+**Filtering:**
 - Returning 404 instead of 200 with empty array for non-matching filters
 - Missing the keyword-required check on GET /api/search (must return 400)
 - Searching the `year` field (it should NOT be searched)
 - Case-sensitive filtering (must be case-insensitive)
 
-**v3 (full contract):**
+**Writes / Stats / Pagination:**
 - Returning 200 instead of 201 for POST
 - Not implementing pagination on GET /api/books (without keyword)
 - Returning paginated wrapper on GET /api/books?keyword=X (should be flat array)

@@ -16,7 +16,6 @@ export function OperatorPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [config, setConfig] = useState<BenchConfig>({
-    level: "v3",
     dataSize: "small",
     mode: "quick",
   });
@@ -28,19 +27,6 @@ export function OperatorPage() {
   useEffect(() => {
     api.getEntries().then(setEntries).catch(console.error);
   }, []);
-
-  const filteredEntries = entries.filter((e) => {
-    const levels = ["v1", "v2", "v3"];
-    return levels.indexOf(e.level) >= levels.indexOf(config.level);
-  });
-
-  const filteredIds = new Set(filteredEntries.map((e) => e.id));
-  useEffect(() => {
-    setSelected((prev) => {
-      const next = new Set([...prev].filter((id) => filteredIds.has(id)));
-      return next.size === prev.size ? prev : next;
-    });
-  }, [config.level]);
 
   const entryMap = new Map(
     entries.map((e) => [
@@ -94,7 +80,7 @@ export function OperatorPage() {
   const saveResults = async () => {
     if (results.length === 0) return;
     try {
-      const name = `batch-${config.level}-${config.dataSize}-${config.mode}`;
+      const name = `batch-${config.dataSize}-${config.mode}`;
       const { filename } = await api.saveBatchResults(name, results);
       alert(`Saved as ${filename}`);
     } catch (e) {
@@ -135,7 +121,7 @@ export function OperatorPage() {
       <h1 className="text-2xl font-bold text-gray-100">Operator</h1>
 
       <ol className="text-sm text-gray-400 list-decimal list-inside flex flex-wrap gap-x-6 gap-y-1">
-        <li>Choose <GlossaryTerm term="level">level</GlossaryTerm> and <GlossaryTerm term="data size">data size</GlossaryTerm></li>
+        <li>Choose <GlossaryTerm term="data size">data size</GlossaryTerm></li>
         <li>Choose <GlossaryTerm term="quick mode">mode</GlossaryTerm></li>
         <li>Select two or more entries</li>
         <li>Run benchmark</li>
@@ -155,11 +141,11 @@ export function OperatorPage() {
           Select Entries
         </h2>
         <EntrySelector
-          entries={filteredEntries}
+          entries={entries}
           selected={selected}
           onToggle={toggleEntry}
           onSelectAll={() =>
-            setSelected(new Set(filteredEntries.map((e) => e.id)))
+            setSelected(new Set(entries.map((e) => e.id)))
           }
           onSelectNone={() => setSelected(new Set())}
         />

@@ -10,7 +10,7 @@
 # Example: ./build-and-validate.sh
 #          ./build-and-validate.sh --verbose
 #
-# Runs --detect by default to auto-detect your entry's level.
+# Runs the validator against the entry.
 # ============================================================
 
 set -euo pipefail
@@ -49,4 +49,4 @@ done
 
 echo ""
 echo "=== Running validator ==="
-"$REPO_ROOT/validate/run.sh" "http://localhost:$PORT" --detect --verbose "$@"
+"$REPO_ROOT/validate/run.sh" "http://localhost:$PORT" --verbose "$@"

@@ -23,9 +23,8 @@ async function json<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 // Entries
-export async function getEntries(level?: string): Promise<Entry[]> {
-  const q = level ? `?level=${level}` : "";
-  const res = await json<{ entries: Entry[] }>(`/entries${q}`);
+export async function getEntries(): Promise<Entry[]> {
+  const res = await json<{ entries: Entry[] }>(`/entries`);
   return res.entries;
 }
 
@@ -81,7 +80,6 @@ export function resetBenchmark() {
 // Tournament
 export function createTournament(params: {
   name: string;
-  level: string;
   dataSize: string;
   mode: "quick" | "full";
   metric: string;

@@ -1,6 +1,6 @@
 import { execSync, exec } from 'child_process';
 import type { EndpointResult, BenchmarkResult, BenchmarkConfig, BenchmarkStatus } from '../../shared/types.js';
-import { ENDPOINTS_BY_LEVEL } from '../../shared/types.js';
+import { BENCHMARK_ENDPOINTS } from '../../shared/types.js';
 import * as dockerService from './docker.js';
 
 const BENCHMARK_PORT = 9000;
@@ -84,7 +84,7 @@ export async function runBenchmark(
   if (!tool) throw new Error('No benchmark tool found. Install oha or hey.');
 
   const modeConfig = MODES[config.mode];
-  const endpoints = config.endpoints || ENDPOINTS_BY_LEVEL[config.level] || [];
+  const endpoints = config.endpoints || BENCHMARK_ENDPOINTS;
 
   // Build
   currentStatus = { state: 'building', entryId };
@@ -134,7 +134,6 @@ export async function runBenchmark(
       entryId,
       timestamp: new Date().toISOString(),
       mode: config.mode,
-      level: config.level,
       dataSize: config.dataSize,
       startupMs,
       imageSizeMb,

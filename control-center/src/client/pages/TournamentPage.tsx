@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import type { Entry, Tournament } from "@shared/types";
-import { METRIC_OPTIONS, ENDPOINTS_BY_LEVEL } from "@shared/types";
+import { METRIC_OPTIONS, BENCHMARK_ENDPOINTS } from "@shared/types";
 import { EntrySelector } from "../components/EntrySelector";
 import { BracketView } from "../components/BracketView";
 import { MatchupCard } from "../components/MatchupCard";
@@ -16,13 +16,7 @@ export function TournamentPage() {
 
   // Setup form
   const [name, setName] = useState("Tournament");
-  const [level, setLevel] = useState("v3");
   const [dataSize, setDataSize] = useState("small");
-
-  const handleLevelChange = (newLevel: string) => {
-    setLevel(newLevel);
-    setBenchEndpoint("all");
-  };
   const [mode, setMode] = useState<"quick" | "full">("quick");
   const [metric, setMetric] = useState("throughput");
   const [benchEndpoint, setBenchEndpoint] = useState("all");
@@ -49,11 +43,6 @@ export function TournamentPage() {
     api.getEntries().then(setEntries).catch(console.error);
   }, []);
 
-  const filteredEntries = entries.filter((e) => {
-    const levels = ["v1", "v2", "v3"];
-    return levels.indexOf(e.level) >= levels.indexOf(level);
-  });
-
   const toggleEntry = (id: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -69,7 +58,6 @@ export function TournamentPage() {
     try {
       const t = await api.createTournament({
         name,
-        level,
         dataSize,
         mode,
         metric,
@@ -159,18 +147,6 @@ export function TournamentPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Level</label>
-                <select
-                  value={level}
-                  onChange={(e) => handleLevelChange(e.target.value)}
-                  className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm text-gray-100"
-                >
-                  <option value="v1">v1</option>
-                  <option value="v2">v2</option>
-                  <option value="v3">v3</option>
-                </select>
-              </div>
-              <div>
                 <label className="block text-sm text-gray-400 mb-1">Data Size</label>
                 <select
                   value={dataSize}
@@ -215,9 +191,9 @@ export function TournamentPage() {
                   className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm text-gray-100"
                 >
                   <option value="all">
-                    All endpoints ({(ENDPOINTS_BY_LEVEL[level] || []).length})
+                    All endpoints ({BENCHMARK_ENDPOINTS.length})
                   </option>
-                  {(ENDPOINTS_BY_LEVEL[level] || []).map((ep) => (
+                  {BENCHMARK_ENDPOINTS.map((ep) => (
                     <option key={ep} value={ep}>
                       {ep}
                     </option>
@@ -233,11 +209,11 @@ export function TournamentPage() {
               Select Entries (min 2)
             </h2>
             <EntrySelector
-              entries={filteredEntries}
+              entries={entries}
               selected={selected}
               onToggle={toggleEntry}
               onSelectAll={() =>
-                setSelected(new Set(filteredEntries.map((e) => e.id)))
+                setSelected(new Set(entries.map((e) => e.id)))
               }
               onSelectNone={() => setSelected(new Set())}
             />
@@ -268,7 +244,6 @@ export function TournamentPage() {
               </h2>
               <p className="text-sm text-gray-500">
                 {tournament.totalEntries} entries |{" "}
-                <GlossaryTerm term={tournament.level}>{tournament.level}</GlossaryTerm> |{" "}
                 {tournament.dataSize} | {metricInfo?.label}
               </p>
             </div>

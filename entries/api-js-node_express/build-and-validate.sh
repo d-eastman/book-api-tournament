@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # Build, run, and validate this entry.
 # Usage: ./build-and-validate.sh [validator-args...]
-# Example: ./build-and-validate.sh --level v1
-#          ./build-and-validate.sh --detect --verbose
+# Example: ./build-and-validate.sh --verbose
 
 set -euo pipefail
 
@@ -41,4 +40,4 @@ done
 
 echo ""
 echo "=== Running validator ==="
-"$REPO_ROOT/validate/run.sh" "http://localhost:$PORT" --detect "$@"
+"$REPO_ROOT/validate/run.sh" "http://localhost:$PORT" --verbose "$@"

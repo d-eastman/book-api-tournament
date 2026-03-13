@@ -1,4 +1,4 @@
-import { ENDPOINTS_BY_LEVEL } from "@shared/types";
+import { BENCHMARK_ENDPOINTS } from "@shared/types";
 import type { BenchmarkConfig as Config } from "@shared/types";
 import { GlossaryTerm } from "./GlossaryTerm";
 
@@ -13,21 +13,6 @@ export function BenchmarkConfig({ config, onChange }: Props) {
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-      <div>
-        <label className="block text-sm text-gray-400 mb-1"><GlossaryTerm term="level">Level</GlossaryTerm></label>
-        <select
-          value={config.level}
-          onChange={(e) =>
-            set({ level: e.target.value as Config["level"] })
-          }
-          className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm text-gray-100"
-        >
-          <option value="v1">v1</option>
-          <option value="v2">v2</option>
-          <option value="v3">v3</option>
-        </select>
-      </div>
-
       <div>
         <label className="block text-sm text-gray-400 mb-1"><GlossaryTerm term="data size">Data Size</GlossaryTerm></label>
         <select
@@ -71,10 +56,10 @@ export function BenchmarkConfig({ config, onChange }: Props) {
 
       <div className="col-span-2 md:col-span-3">
         <label className="block text-sm text-gray-400 mb-1">
-          <GlossaryTerm term="endpoints">Endpoints</GlossaryTerm> ({ENDPOINTS_BY_LEVEL[config.level]?.length || 0})
+          <GlossaryTerm term="endpoints">Endpoints</GlossaryTerm> ({BENCHMARK_ENDPOINTS.length})
         </label>
         <div className="flex flex-wrap gap-2">
-          {(ENDPOINTS_BY_LEVEL[config.level] || []).map((ep) => (
+          {BENCHMARK_ENDPOINTS.map((ep) => (
             <span
               key={ep}
               className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded"

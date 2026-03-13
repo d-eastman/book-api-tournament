@@ -7,7 +7,7 @@ export const tournamentRoutes = new Hono();
 
 tournamentRoutes.post('/create', async (c) => {
   const body = await c.req.json();
-  const { name, entryIds, level, dataSize, mode, metric, benchmarkEndpoint } = body;
+  const { name, entryIds, dataSize, mode, metric, benchmarkEndpoint } = body;
 
   if (!name || !entryIds || entryIds.length < 2) {
     return c.json({ error: 'name and at least 2 entryIds required' }, 400);
@@ -16,7 +16,6 @@ tournamentRoutes.post('/create', async (c) => {
   const tournament = bracket.createTournament(
     name,
     entryIds,
-    level || 'v3',
     dataSize || 'small',
     mode || 'quick',
     metric || 'throughput',
@@ -58,7 +57,6 @@ tournamentRoutes.post('/:id/run-matchup', async (c) => {
   try {
     // Benchmark both entries
     const config = {
-      level: tournament.level as any,
       dataSize: tournament.dataSize as any,
       mode: tournament.mode,
       endpoints: [tournament.benchmarkEndpoint],

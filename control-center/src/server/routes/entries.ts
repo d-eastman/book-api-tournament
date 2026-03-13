@@ -1,15 +1,10 @@
 import { Hono } from 'hono';
-import { scanEntries, filterByLevel } from '../services/entry-scanner.js';
+import { scanEntries } from '../services/entry-scanner.js';
 
 export const entriesRoutes = new Hono();
 
 entriesRoutes.get('/', (c) => {
   let entries = scanEntries();
-
-  const level = c.req.query('level');
-  if (level) {
-    entries = filterByLevel(entries, level);
-  }
 
   const sort = c.req.query('sort');
   if (sort === 'framework') {

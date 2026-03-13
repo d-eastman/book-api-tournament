@@ -94,9 +94,6 @@ export function EntrySelector({
             <span className="text-sm text-gray-200 flex-1">
               {entry.language}/{entry.framework}
             </span>
-            <span className="text-xs text-gray-500 uppercase">
-              {entry.level}
-            </span>
             {!entry.hasDockerfile && (
               <span className="text-xs text-red-400">No Dockerfile</span>
             )}

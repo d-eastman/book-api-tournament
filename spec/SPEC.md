@@ -39,23 +39,11 @@ This document is the **single source of truth** for the Book API contract. All i
 
 ---
 
-## 3. Levels
+## 3. Endpoints
 
-Every entry implements one of three levels. Levels are strictly cumulative: v2 includes all of v1, and v3 includes all of v1 and v2.
+Every entry implements all 8 endpoints described below, backed by SQLite.
 
-- **v1** -- Starting point. Four endpoints backed by SQLite. Benchmarked at small, medium, or large data sizes.
-- **v2** -- Adds filtering, search, and the author-books relationship to v1. Six endpoints total. Still read-only.
-- **v3** -- Full contract. Adds writes (POST), aggregate statistics, and pagination. Eight endpoints total.
-
-See `CLAUDE.md` for the full level comparison table, entry requirements, and competition rules.
-
----
-
-## 4. Endpoints
-
-### 4.1 Base Endpoints (All Levels)
-
-These four endpoints are required at every level: v1, v2, and v3.
+### 3.1 Base Endpoints
 
 #### GET /api/authors
 
@@ -85,12 +73,9 @@ Returns a single author by ID.
 
 #### GET /api/books
 
-Returns all books. The response format depends on the level:
+Returns all books as a **paginated response object** (see section 3.3).
 
-- **v1, v2:** Flat JSON array of all books.
-- **v3 (without keyword):** Paginated response object (see section 4.3).
-
-**Response (v1, v2):** `200 OK`
+**Response:** `200 OK`
 ```json
 [
   {"id": 1, "title": "Kindred", "authorId": 1, "genre": "Science Fiction", "year": 1979, "description": "A modern..."},
@@ -114,9 +99,7 @@ Returns a single book by ID.
 
 ---
 
-### 4.2 Filtering and Search Endpoints (v2+)
-
-These endpoints are added at v2 and required for v2 and v3.
+### 3.2 Filtering and Search Endpoints
 
 #### GET /api/authors?keyword=X
 
@@ -136,8 +119,8 @@ Filters authors by keyword. Case-insensitive substring match on `name` and `bio`
 
 Filters books by keyword. Case-insensitive substring match on `title`, `genre`, and `description` fields only. The `year` and `id` fields are **never** searched.
 
-- Without the `keyword` query parameter: returns all books (v2: flat array; v3: paginated response).
-- With keyword: always returns a **flat array**, even in v3.
+- Without the `keyword` query parameter: returns all books (paginated response).
+- With keyword: always returns a **flat array** (no pagination wrapper).
 - Non-matching keyword returns `200` with an empty array, **not** 404.
 
 **Response:** `200 OK`
@@ -193,13 +176,11 @@ Combined search across both authors and books. Returns an object with two arrays
 
 ---
 
-### 4.3 Full Contract Endpoints (v3)
-
-These endpoints are added at v3 only.
+### 3.3 Write, Stats, and Pagination Endpoints
 
 #### GET /api/books (paginated, without keyword)
 
-In v3, `GET /api/books` without a `keyword` parameter returns a **paginated response object** instead of a flat array.
+`GET /api/books` without a `keyword` parameter returns a **paginated response object**.
 
 **Query parameters:**
 - `page` -- Page number (default: `1`)
@@ -221,7 +202,7 @@ In v3, `GET /api/books` without a `keyword` parameter returns a **paginated resp
 **Behavior:**
 - `totalPages` is calculated as `ceil(totalItems / limit)`.
 - If `page` exceeds the last page, return `200` with an empty `data` array (not 404). The `page`, `limit`, `totalItems`, and `totalPages` fields are still populated correctly.
-- `GET /api/books?keyword=X` still returns a **flat array** in v3 (no pagination wrapper).
+- `GET /api/books?keyword=X` still returns a **flat array** (no pagination wrapper).
 
 #### POST /api/books
 
@@ -301,7 +282,7 @@ Returns aggregate statistics computed from the current data.
 
 ---
 
-## 5. Error Handling
+## 4. Error Handling
 
 All error responses use `application/json` Content-Type and the following shape:
 
@@ -322,9 +303,9 @@ Error messages do not need to match these examples exactly, but the status codes
 
 ---
 
-## 6. Filtering Rules
+## 5. Filtering Rules
 
-Filtering applies to v2 and v3 endpoints that accept a `keyword` query parameter.
+Filtering applies to endpoints that accept a `keyword` query parameter.
 
 1. **Case-insensitive substring matching.** The keyword `"butler"` matches `"Octavia Butler"`.
 2. **Fields searched per endpoint:**
@@ -337,7 +318,7 @@ Filtering applies to v2 and v3 endpoints that accept a `keyword` query parameter
 
 ---
 
-## 7. Database Configuration
+## 6. Database Configuration
 
 - **Engine:** SQLite
 - **Path:** Configured via the `DB_PATH` environment variable. Default: `/app/books.db`.

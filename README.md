@@ -12,17 +12,9 @@ The project serves three purposes:
 - **Community** — Invite engineers to contribute their own implementations and join the tournament
 - **Presentation** — Power a lunch-and-learn titled "One API, 28 Frameworks, 9 Languages: What I Learned Building the Same Thing Everywhere"
 
-## Entry Levels
+## The API
 
-Entries implement one of three levels, each building on the last:
-
-| Level | Endpoints | Database | Description |
-|-------|-----------|----------|-------------|
-| **v1** | 4 | SQLite | Recommended starting point. Basic CRUD reads. |
-| **v2** | 6 | SQLite | Adds filtering, search, and author-books relationship. |
-| **v3** | 8 | SQLite | Full contract: writes, pagination, and aggregate stats. |
-
-See [spec/SPEC.md](spec/SPEC.md) for the complete API contract.
+Every entry implements the same 8 endpoints backed by SQLite: list/get authors and books, keyword filtering, search, creating books, pagination, and aggregate stats. See [spec/SPEC.md](spec/SPEC.md) for the complete contract.
 
 ## Quick Start
 
@@ -50,13 +42,8 @@ docker run -p 8080:8080 api-your-framework
 ### 3. Validate
 
 ```bash
-# Auto-detect the highest level your API supports
-./validate/run.sh http://localhost:8080 --detect
-
-# Or validate a specific level
-./validate/run.sh http://localhost:8080 --level v1
-./validate/run.sh http://localhost:8080 --level v2
-./validate/run.sh http://localhost:8080 --level v3
+./validate/run.sh http://localhost:8080
+./validate/run.sh http://localhost:8080 --verbose
 ```
 
 ### 4. Benchmark

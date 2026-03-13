@@ -21,7 +21,7 @@ export function saveBatchResults(name: string, results: BenchmarkResult[]): stri
   const filename = `batch-${sanitizeName(name)}-${timestamp}.csv`;
   const filepath = path.join(RESULTS_DIR, filename);
 
-  const headers = 'timestamp,name,entryId,language,framework,level,dataSize,mode,endpoint,reqPerSec,avgMs,p50Ms,p95Ms,p99Ms,startupMs,memIdleMib,memLoadedMib,imageSizeMb\n';
+  const headers = 'timestamp,name,entryId,language,framework,dataSize,mode,endpoint,reqPerSec,avgMs,p50Ms,p95Ms,p99Ms,startupMs,memIdleMib,memLoadedMib,imageSizeMb\n';
   let csv = headers;
 
   for (const result of results) {
@@ -32,7 +32,6 @@ export function saveBatchResults(name: string, results: BenchmarkResult[]): stri
         result.entryId,
         '', // language — filled by consumer
         '', // framework — filled by consumer
-        result.level,
         result.dataSize,
         result.mode,
         ep.endpoint,
@@ -59,7 +58,7 @@ export function saveTournamentResults(tournament: Tournament): string {
   const filename = `tournament-${sanitizeName(tournament.name)}-${timestamp}.csv`;
   const filepath = path.join(RESULTS_DIR, filename);
 
-  const headers = 'timestamp,tournamentName,metric,level,dataSize,mode,round,matchupId,entry1,entry2,entry1Score,entry2Score,winner,bye\n';
+  const headers = 'timestamp,tournamentName,metric,dataSize,mode,round,matchupId,entry1,entry2,entry1Score,entry2Score,winner,bye\n';
   let csv = headers;
 
   for (const round of tournament.rounds) {
@@ -68,7 +67,6 @@ export function saveTournamentResults(tournament: Tournament): string {
         tournament.createdAt,
         tournament.name,
         tournament.metric,
-        tournament.level,
         tournament.dataSize,
         tournament.mode,
         round.round,

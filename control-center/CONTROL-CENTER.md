@@ -151,7 +151,6 @@ Returns all entries scanned from the `entries/` directory with parsed `entry.yam
       id: "api-go-fiber",
       framework: "Fiber",
       language: "Go",
-      level: "v3",              // "v1", "v2", or "v3"
       version: "2.52.5",
       author: "maintainer",
       path: "entries/api-go-fiber",
@@ -206,7 +205,6 @@ Stops and removes all tournament-managed containers.
 ```json
 {
   "entryId": "api-go-fiber",
-  "level": "v2",
   "dataSize": "small",
   "mode": "quick",
   "endpoints": ["GET /api/authors", "GET /api/search?keyword=fantasy"]
@@ -214,11 +212,10 @@ Stops and removes all tournament-managed containers.
 ```
 Runs a benchmark against a single entry. Full lifecycle: build → start → health check → warmup → benchmark → stop.
 
-- `level`: determines which endpoints are benchmarked.
 - `dataSize`: "small", "medium", or "large". Determines which seed SQL is used.
 - `mode: "quick"` — 2,000 requests, 20 concurrency
 - `mode: "full"` — 20,000 requests, 50 concurrency
-- `endpoints`: optional, defaults to all endpoints for the level
+- `endpoints`: optional, defaults to all 8 endpoints
 
 Response:
 ```json
@@ -226,7 +223,6 @@ Response:
   "entryId": "api-go-fiber",
   "timestamp": "2026-03-11T14:30:00Z",
   "mode": "quick",
-  "level": "v2",
   "dataSize": "small",
   "startupMs": 147,
   "imageSizeMb": 5,
@@ -247,7 +243,6 @@ Response:
 ```json
 {
   "entryIds": ["api-go-fiber", "api-rust-actix", "api-node-hono"],
-  "level": "v2",
   "dataSize": "small",
   "mode": "full"
 }
@@ -264,7 +259,6 @@ Returns current benchmark state: idle, building, warming up, benchmarking (entry
 {
   "name": "Speed Demon v2 Quick",
   "entryIds": ["api-go-fiber", "api-rust-actix", ...],
-  "level": "v2",
   "dataSize": "small",
   "mode": "quick",
   "metric": "throughput",

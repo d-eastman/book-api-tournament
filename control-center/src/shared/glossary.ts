@@ -159,7 +159,7 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
   "SQLite": {
     term: "SQLite",
     plain: "A tiny database that lives inside your application as a single file. No separate server to install or manage. Perfect for small applications and testing.",
-    technical: "An embedded relational database engine. The entire database is a single file on disk. Supports SQL, transactions, and concurrent reads. Write operations take a file-level lock. Used in this tournament as the standard data layer for v1/v2/v3 entries.",
+    technical: "An embedded relational database engine. The entire database is a single file on disk. Supports SQL, transactions, and concurrent reads. Write operations take a file-level lock. Used in this tournament as the standard data layer for all entries.",
   },
 
   // ── Benchmark Concepts ─────────────────────────────
@@ -209,12 +209,6 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
 
   // ── Configuration Concepts ─────────────────────────
 
-  "level": {
-    term: "Level",
-    plain: "Which tier of the API spec to benchmark. Higher levels have more endpoints — v1 has 4, v2 has 6, and v3 has 8.",
-    technical: "Entries at or above the selected level are eligible. A v3 entry can compete in a v1 tournament (benchmarked on v1 endpoints only).",
-  },
-
   "data size": {
     term: "Data Size",
     plain: "How much data is in the database during the benchmark. Small has 16 books, medium has 1,000, and large has 50,000. Bigger datasets stress memory and serialization.",
@@ -223,23 +217,6 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
 
   "endpoints": {
     term: "Endpoints",
-    plain: "The API routes that get benchmarked. Each level defines a set of endpoints — the load tester hits each one and measures how fast the API responds.",
-  },
-
-  // ── Level Concepts ─────────────────────────────────
-
-  "v1": {
-    term: "Level v1",
-    plain: "The starting level. Four basic endpoints (list and get-by-ID for authors and books) backed by a SQLite database.",
-  },
-
-  "v2": {
-    term: "Level v2",
-    plain: "Adds keyword filtering and search to v1. Six endpoints total. Still read-only — no creating or modifying data.",
-  },
-
-  "v3": {
-    term: "Level v3",
-    plain: "The full API. Adds creating new books, aggregate statistics, and paginated listings. Eight endpoints total.",
+    plain: "The 8 API routes that get benchmarked — the load tester hits each one and measures how fast the API responds.",
   },
 };

@@ -27,21 +27,10 @@ export function scanEntries(): Entry[] {
       language: meta.language || 'Unknown',
       version: meta.version || '',
       author: meta.author || '',
-      level: meta.level || 'v1',
       repo: meta.repo || '',
       notes: meta.notes || '',
       path: `entries/${dir}`,
       hasDockerfile: fs.existsSync(dockerfilePath),
     };
   }).sort((a, b) => a.language.localeCompare(b.language) || a.framework.localeCompare(b.framework));
-}
-
-// Filter entries eligible for a given level
-export function filterByLevel(entries: Entry[], level: string): Entry[] {
-  const levelOrder = ['v1', 'v2', 'v3'];
-  const minIdx = levelOrder.indexOf(level);
-  return entries.filter(e => {
-    const entryIdx = levelOrder.indexOf(e.level);
-    return entryIdx >= minIdx;
-  });
 }

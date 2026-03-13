@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Entry } from "@shared/types";
 import { getColor } from "../lib/colors";
-import { GlossaryTerm } from "../components/GlossaryTerm";
 import * as api from "../lib/api";
 
 export function LandingPage() {
@@ -13,10 +12,6 @@ export function LandingPage() {
   }, []);
 
   const languages = [...new Set(entries.map((e) => e.language))].sort();
-  const levels = ["v1", "v2", "v3"];
-  const levelCounts = Object.fromEntries(
-    levels.map((l) => [l, entries.filter((e) => e.level === l).length])
-  );
 
   return (
     <div className="space-y-12">
@@ -41,7 +36,7 @@ export function LandingPage() {
             Operator
           </h2>
           <p className="text-sm text-gray-400">
-            Run batch benchmarks across entries. Configure level, data size,
+            Run batch benchmarks across entries. Configure data size
             and mode, then compare results side by side.
           </p>
         </Link>
@@ -78,20 +73,6 @@ export function LandingPage() {
           <h2 className="text-xl font-semibold">
             {entries.length} Entries
           </h2>
-
-          {/* Level breakdown */}
-          <div className="flex gap-3">
-            {levels.map((l) =>
-              levelCounts[l] > 0 ? (
-                <span
-                  key={l}
-                  className="text-xs px-2.5 py-1 rounded bg-gray-800 text-gray-300"
-                >
-                  <GlossaryTerm term={l}>{l}</GlossaryTerm>: {levelCounts[l]}
-                </span>
-              ) : null
-            )}
-          </div>
 
           {/* Language grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">

@@ -21,7 +21,6 @@ const tournaments = new Map<string, Tournament>();
 export function createTournament(
   name: string,
   entryIds: string[],
-  level: string,
   dataSize: string,
   mode: 'quick' | 'full',
   metric: string,
@@ -77,7 +76,6 @@ export function createTournament(
   const tournament: Tournament = {
     id,
     name,
-    level,
     dataSize,
     mode,
     metric,

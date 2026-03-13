@@ -5,7 +5,6 @@ export interface Entry {
   language: string;
   version: string;
   author: string;
-  level: "v1" | "v2" | "v3";
   repo?: string;
   notes?: string;
   path: string;                  // relative path from repo root
@@ -16,7 +15,6 @@ export interface Entry {
 
 // Benchmark configuration
 export interface BenchmarkConfig {
-  level: "v1" | "v2" | "v3";
   dataSize: "small" | "medium" | "large";
   mode: "quick" | "full";
   endpoints?: string[];
@@ -37,7 +35,6 @@ export interface BenchmarkResult {
   entryId: string;
   timestamp: string;
   mode: "quick" | "full";
-  level: string;
   dataSize: string;
   startupMs: number;
   imageSizeMb: number;
@@ -74,7 +71,6 @@ export interface Round {
 export interface Tournament {
   id: string;
   name: string;
-  level: string;
   dataSize: string;
   mode: "quick" | "full";
   metric: string;
@@ -113,33 +109,17 @@ export const METRIC_OPTIONS: MetricOption[] = [
   { value: "efficiency", label: "Efficiency (req/s per MiB)", higherWins: true },
 ];
 
-// Endpoints benchmarked per level
-export const ENDPOINTS_BY_LEVEL: Record<string, string[]> = {
-  v1: [
-    "GET /api/authors",
-    "GET /api/books",
-    "GET /api/authors/1",
-    "GET /api/books/1",
-  ],
-  v2: [
-    "GET /api/authors",
-    "GET /api/books",
-    "GET /api/authors/1",
-    "GET /api/books/1",
-    "GET /api/search?keyword=fantasy",
-    "GET /api/authors/1/books",
-  ],
-  v3: [
-    "GET /api/authors",
-    "GET /api/books",
-    "GET /api/authors/1",
-    "GET /api/books/1",
-    "GET /api/search?keyword=fantasy",
-    "GET /api/authors/1/books",
-    "POST /api/books",
-    "GET /api/stats",
-  ],
-};
+// All endpoints benchmarked
+export const BENCHMARK_ENDPOINTS: string[] = [
+  "GET /api/authors",
+  "GET /api/books",
+  "GET /api/authors/1",
+  "GET /api/books/1",
+  "GET /api/search?keyword=fantasy",
+  "GET /api/authors/1/books",
+  "POST /api/books",
+  "GET /api/stats",
+];
 
 // Saved result file metadata
 export interface SavedResult {

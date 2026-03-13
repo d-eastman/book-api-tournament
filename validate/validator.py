@@ -4,7 +4,7 @@ Book API Tournament — Validator
 Zero-dependency correctness test suite for API entries.
 
 Usage:
-    python3 validator.py <base-url> [--level v1|v2|v3] [--detect] [--verbose]
+    python3 validator.py <base-url> [--verbose]
 """
 
 import sys
@@ -137,9 +137,8 @@ class TestResult:
 
 
 class TestSuite:
-    def __init__(self, base_url, level, verbose=False):
+    def __init__(self, base_url, verbose=False):
         self.base_url = base_url.rstrip("/")
-        self.level = level
         self.verbose = verbose
         self.results = []
         self.authors = SMALL_AUTHORS
@@ -200,15 +199,11 @@ class TestSuite:
                      f"Got: {data.get('name') if isinstance(data, dict) else data}")
             all_pass = all_pass and ok
 
-        # GET /api/books
+        # GET /api/books — returns paginated wrapper
         status, _, data = http_get(self.url("/api/books"))
-        # v3 without keyword returns paginated; v1/v2 returns flat array
-        if self.level == "v3":
-            is_paginated = isinstance(data, dict) and "data" in data
-            if is_paginated:
-                book_list = data["data"]
-            else:
-                book_list = data
+        is_paginated = isinstance(data, dict) and "data" in data
+        if is_paginated:
+            book_list = data["data"]
         else:
             book_list = data
 
@@ -238,7 +233,7 @@ class TestSuite:
 
         return all_pass
 
-    # ── Phase 3: Filter Correctness (v2+) ──
+    # ── Phase 3: Filter Correctness ──
 
     def phase_filter(self):
         all_pass = True
@@ -303,7 +298,7 @@ class TestSuite:
 
         return all_pass
 
-    # ── Phase 4: Search Correctness (v2+) ──
+    # ── Phase 4: Search Correctness ──
 
     def phase_search(self):
         all_pass = True
@@ -335,7 +330,7 @@ class TestSuite:
 
         return all_pass
 
-    # ── Phase 5: Relationship (v2+) ──
+    # ── Phase 5: Relationship ──
 
     def phase_relationship(self):
         all_pass = True
@@ -362,7 +357,7 @@ class TestSuite:
 
         return all_pass
 
-    # ── Phase 6: Write Correctness (v3) ──
+    # ── Phase 6: Write Correctness ──
 
     def phase_write(self):
         all_pass = True
@@ -417,7 +412,7 @@ class TestSuite:
 
         return all_pass
 
-    # ── Phase 7: Compute / Stats (v3) ──
+    # ── Phase 7: Compute / Stats ──
 
     def phase_stats(self):
         all_pass = True
@@ -516,7 +511,7 @@ class TestSuite:
 
         return all_pass
 
-    # ── Phase 9: Pagination (v3) ──
+    # ── Phase 9: Pagination ──
 
     def phase_pagination(self):
         all_pass = True
@@ -576,7 +571,7 @@ class TestSuite:
                      f"Expected {expected_pages}, got {total_pages}")
             all_pass = all_pass and ok
 
-        # GET /api/books?keyword=X → flat array (NOT paginated) even in v3
+        # GET /api/books?keyword=X → flat array (NOT paginated)
         status, _, data = http_get(self.url("/api/books?keyword=fantasy"))
         ok = status == 200 and isinstance(data, list)
         self.add("GET /api/books?keyword=fantasy → flat array (not paginated)", ok,
@@ -585,10 +580,10 @@ class TestSuite:
 
         return all_pass
 
-    # ── Run All Phases for a Level ──
+    # ── Run All Phases ──
 
     def run(self):
-        """Run all phases for the configured level. Returns (passed, total)."""
+        """Run all phases. Returns (passed, total)."""
         # Phase 1: Smoke
         if not self.phase_smoke():
             return self._summary()
@@ -596,24 +591,26 @@ class TestSuite:
         # Phase 2: Read
         self.phase_read()
 
-        # Phase 8: Errors (all levels)
+        # Phase 3: Filter
+        self.phase_filter()
+
+        # Phase 4: Search
+        self.phase_search()
+
+        # Phase 5: Relationship
+        self.phase_relationship()
+
+        # Phase 6: Write
+        self.phase_write()
+
+        # Phase 7: Stats
+        self.phase_stats()
+
+        # Phase 8: Errors
         self.phase_errors()
 
-        if self.level in ("v2", "v3"):
-            # Phase 3: Filter
-            self.phase_filter()
-            # Phase 4: Search
-            self.phase_search()
-            # Phase 5: Relationship
-            self.phase_relationship()
-
-        if self.level == "v3":
-            # Phase 6: Write
-            self.phase_write()
-            # Phase 7: Stats
-            self.phase_stats()
-            # Phase 9: Pagination
-            self.phase_pagination()
+        # Phase 9: Pagination
+        self.phase_pagination()
 
         return self._summary()
 
@@ -623,88 +620,20 @@ class TestSuite:
         return passed, total
 
 
-# ─── Auto-Detect Mode ───────────────────────────────────────────────────────
-
-def auto_detect(base_url, verbose=False):
-    """Try each level, report the highest passing level."""
-    levels = [
-        ("v1", "v1 (4 endpoints, SQLite)"),
-        ("v2", "v2 (+ filtering, search)"),
-        ("v3", "v3 (+ POST, stats, pagination)"),
-    ]
-
-    print("\n=== Auto-detecting level ===")
-    detected = None
-    last_failures = []
-    results_by_level = []
-
-    for level, description in levels:
-        suite = TestSuite(base_url, level, verbose)
-        passed, total = suite.run()
-
-        if passed == total:
-            status = "PASS"
-            detected = level
-            last_failures = []  # Clear failures since we found a higher passing level
-        else:
-            status = "FAIL"
-
-        pad = "." * max(1, 40 - len(description))
-        print(f"  {description} {pad} {status} ({passed}/{total})")
-
-        if status == "FAIL":
-            failures = [r for r in suite.results if not r.passed]
-            if verbose:
-                for r in failures:
-                    print(f"    {r}")
-            # If we already detected a level and this one fails, show why and stop
-            if detected is not None:
-                last_failures = failures
-                for r in failures:
-                    print(f"    {r}")
-                break
-            # If nothing detected yet (e.g., v1 fails), keep trying higher levels
-
-    print()
-    if detected:
-        print(f"  Detected level: {detected}")
-        if last_failures:
-            level_names = [l[0] for l in levels]
-            detected_idx = level_names.index(detected)
-            if detected_idx < len(level_names) - 1:
-                next_level = level_names[detected_idx + 1]
-                print(f"  To reach {next_level}, fix the {len(last_failures)} failure(s) above.")
-    else:
-        print("  Detected level: NONE (no level passed)")
-        print("  Make sure the API is running and accessible.")
-
-    print()
-    return detected
-
-
 # ─── Main ────────────────────────────────────────────────────────────────────
 
 def main():
     parser = argparse.ArgumentParser(description="Book API Tournament Validator")
     parser.add_argument("base_url", help="Base URL of the API (e.g., http://localhost:8080)")
-    parser.add_argument("--level", choices=["v1", "v2", "v3"], default="v3",
-                        help="Validation level (default: v3)")
-    parser.add_argument("--detect", action="store_true",
-                        help="Auto-detect the highest passing level")
     parser.add_argument("--verbose", action="store_true",
                         help="Show individual test results")
 
     args = parser.parse_args()
 
-    if args.detect:
-        detected = auto_detect(args.base_url, args.verbose)
-        sys.exit(0 if detected else 1)
-
-    # Single-level validation
-    suite = TestSuite(args.base_url, args.level, args.verbose)
+    suite = TestSuite(args.base_url, args.verbose)
     passed, total = suite.run()
 
-    print(f"\n=== {args.level.upper()} Validation ===")
+    print(f"\n=== Validation ===")
 
     if args.verbose:
         for r in suite.results:
