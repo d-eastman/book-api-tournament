@@ -223,30 +223,6 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
     term: "Single Elimination",
     plain: "Lose once and you're out. No second chances. The last framework standing wins.",
   },
-
-  // ── Level Concepts ───────────────────────────────────
-
-  "hardcoded": {
-    term: "Hardcoded",
-    plain: "An entry level where the data is baked directly into the source code — no database. Reserved for exotic languages like COBOL and Assembly that can't easily connect to a database.",
-    technical: "4 authors, 8 books, embedded in source. Implements only the 4 basic GET endpoints. Cannot compete against database-backed entries. Separate league.",
-  },
-
-  "v1": {
-    term: "Level v1",
-    plain: "The starting level. Four basic endpoints (list and get-by-ID for authors and books) backed by a SQLite database.",
-  },
-
-  "v2": {
-    term: "Level v2",
-    plain: "Adds keyword filtering and search to v1. Six endpoints total. Still read-only — no creating or modifying data.",
-  },
-
-  "v3": {
-    term: "Level v3",
-    plain: "The full API. Adds creating new books, aggregate statistics, and paginated listings. Eight endpoints total.",
-  },
-};
 ```
 
 ---

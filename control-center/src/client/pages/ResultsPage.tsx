@@ -34,10 +34,6 @@ export function ResultsPage() {
     }
   };
 
-  const downloadCsv = (filename: string) => {
-    window.open(`/api/results/${filename}?download=true`, "_blank");
-  };
-
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-100">Results</h1>
@@ -103,17 +99,9 @@ export function ResultsPage() {
             )}
             {selectedFile && !loading && data && (
               <div className="bg-gray-800 rounded-lg p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-medium text-gray-400">
-                    {selectedFile}
-                  </h2>
-                  <button
-                    onClick={() => downloadCsv(selectedFile)}
-                    className="text-sm text-blue-400 hover:text-blue-300"
-                  >
-                    Download CSV
-                  </button>
-                </div>
+                <h2 className="text-sm font-medium text-gray-400">
+                  {selectedFile}
+                </h2>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm text-left">
                     <thead className="text-xs text-gray-400 uppercase border-b border-gray-700">

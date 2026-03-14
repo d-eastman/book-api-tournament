@@ -28,40 +28,7 @@ export async function getEntries(): Promise<Entry[]> {
   return res.entries;
 }
 
-// Containers
-export function buildContainer(entryId: string) {
-  return json("/containers/build", {
-    method: "POST",
-    body: JSON.stringify({ entryId }),
-  });
-}
-
-export function startContainer(entryId: string, dataSize = "small") {
-  return json("/containers/start", {
-    method: "POST",
-    body: JSON.stringify({ entryId, dataSize }),
-  });
-}
-
-export function stopContainer(entryId: string) {
-  return json("/containers/stop", {
-    method: "POST",
-    body: JSON.stringify({ entryId }),
-  });
-}
-
-export function stopAllContainers() {
-  return json("/containers/stop-all", { method: "POST" });
-}
-
 // Benchmark
-export function runBenchmark(entryId: string, config: BenchmarkConfig) {
-  return json("/benchmark/run", {
-    method: "POST",
-    body: JSON.stringify({ entryId, config }),
-  });
-}
-
 export function runBatchBenchmark(entryIds: string[], config: BenchmarkConfig) {
   return json("/benchmark/run-batch", {
     method: "POST",

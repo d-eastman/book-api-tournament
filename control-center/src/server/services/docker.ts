@@ -128,6 +128,3 @@ export async function getMemoryUsage(entryId: string): Promise<number> {
   }
 }
 
-export function getRunningContainers(): Map<string, ContainerInfo> {
-  return runningContainers;
-}
